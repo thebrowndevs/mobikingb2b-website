@@ -1,0 +1,10 @@
+# Allow all crawlers
+User-agent: *
+
+# Disallow sensitive/private pages if any (optional)
+Disallow: /admin/
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://mobikingwholesale.com/sitemap.xml
+

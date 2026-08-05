@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.mobiking.wholesale",
+      "sha256_cert_fingerprints": [
+        "D3:E6:91:A0:72:C7:4D:C0:79:FC:CB:AF:B3:AB:47:81:07:4F:3D:15:C8:DE:FF:91:5E:D2:DF:34:90:2F:37:67"
+      ]
+    }
+  }
+]

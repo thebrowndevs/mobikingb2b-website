@@ -1,0 +1,77 @@
+/* post.module.css */
+.postStyle {
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: #333333;
+}
+
+.postStyle h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 2rem 0 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #002244;
+    color: #002244;
+}
+
+.postStyle h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin: 2rem 0 1rem;
+    color: #002244;
+}
+
+.postStyle h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin: 1.5rem 0 0.8rem;
+    color: #002244;
+}
+
+.postStyle p {
+    margin-bottom: 1.2rem;
+    color: #444444;
+}
+
+.postStyle ul,
+.postStyle ol {
+    margin: 1rem 0 1.5rem;
+    padding-left: 1.8rem;
+}
+
+.postStyle li {
+    margin-bottom: 0.7rem;
+    position: relative;
+}
+
+.postStyle ul li::before {
+    content: "•";
+    color: #002244;
+    font-weight: bold;
+    display: inline-block;
+    width: 1em;
+    margin-left: -1em;
+}
+
+.postStyle a {
+    color: #0066cc;
+    text-decoration: underline;
+    transition: color 0.3s;
+}
+
+.postStyle a:hover {
+    color: #002244;
+    text-decoration: none;
+}
+
+.postStyle strong {
+    color: #002244;
+    font-weight: 600;
+}
+
+.postStyle hr {
+    border: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #002244, transparent);
+    margin: 2.5rem 0;
+}
