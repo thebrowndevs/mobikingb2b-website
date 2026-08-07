@@ -360,7 +360,7 @@ export default function AddressForm({
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {isEditMode ? "Edit Address" : "Add New Address"}
+            {isEditMode ? "Edit Warehouse" : "Add New Warehouse"}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4" onClick={(e) => e.stopPropagation()}>

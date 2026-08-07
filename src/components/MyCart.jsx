@@ -24,7 +24,7 @@ import { toast } from "sonner";
 import { useBreakpoint } from "@/hooks/use-breakpoint";
 
 export default function MyCart({ isOpen, onClose }) {
-  const { user, accessToken, setUser } = useAuth();
+  const { user, accessToken, setUser, onboardingStep } = useAuth();
 
   // --- Step 2: Use the hook to determine the screen size ---
   const { isDesktop } = useBreakpoint();
@@ -34,7 +34,7 @@ export default function MyCart({ isOpen, onClose }) {
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
 
-  const initializeCart = async() => {
+  const initializeCart = async () => {
     // console.log("Called",accessToken)
     setLoading(true);
     const myCart = await getMyCart(accessToken);
@@ -49,8 +49,8 @@ export default function MyCart({ isOpen, onClose }) {
     setLoading(false);
   }
 
-  useEffect(()=>{
-    if(accessToken){
+  useEffect(() => {
+    if (accessToken) {
       initializeCart(accessToken);
     }
   }, [isOpen])
@@ -120,99 +120,112 @@ export default function MyCart({ isOpen, onClose }) {
           </SheetTitle>
         </SheetHeader>
 
-        {loading 
-        
-        ? <Loader2 className="w-6 h-6 animate-spin self-center my-10" />
+        {loading
 
-        :hasItems ? (
-          <>
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              {processedCartItems.map((item) => {
-                const isLoading = loadingItemId === item.uniqueId;
-                return (
-                  <div key={item.uniqueId} className="flex gap-4">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-24 h-24 object-contain rounded-md border bg-gray-50"
-                    />
-                    <div className="flex-1 flex flex-col justify-between">
-                      <div>
-                        <h3 className="font-medium text-sm line-clamp-2">
-                          {item.name}
-                        </h3>
-                        <p className="text-xs text-gray-500 capitalize">
-                          {item.variantName}
-                        </p>
-                        <p className="text-sm font-semibold text-gray-800 mt-1">
-                          ₹{item.price.toLocaleString()}
-                        </p>
-                      </div>
-                      <div className="flex items-center justify-between mt-2">
-                        <div className="flex items-center border rounded-md">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            disabled={isLoading}
-                            onClick={() => handleUpdateCart("remove", item)}
-                          >
-                            −
-                          </Button>
-                          <div className="w-10 flex justify-center items-center">
-                            {isLoading ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <span className="font-medium text-sm">
-                                {item.quantity}
-                              </span>
-                            )}
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            disabled={isLoading || item.quantity >= item.stock}
-                            onClick={() => handleUpdateCart("add", item)}
-                          >
-                            +
-                          </Button>
+          ? <Loader2 className="w-6 h-6 animate-spin self-center my-10" />
+
+          : hasItems ? (
+            <>
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                {processedCartItems.map((item) => {
+                  const isLoading = loadingItemId === item.uniqueId;
+                  return (
+                    <div key={item.uniqueId} className="flex gap-4">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-24 h-24 object-contain rounded-md border bg-gray-50"
+                      />
+                      <div className="flex-1 flex flex-col justify-between">
+                        <div>
+                          <h3 className="font-medium text-sm line-clamp-2">
+                            {item.name}
+                          </h3>
+                          <p className="text-xs text-gray-500 capitalize">
+                            {item.variantName}
+                          </p>
+                          <p className="text-sm font-semibold text-gray-800 mt-1">
+                            ₹{item.price.toLocaleString()}
+                          </p>
                         </div>
-                        <p className="font-medium text-right text-base">
-                          ₹{(item.price * item.quantity).toLocaleString()}
-                        </p>
+                        <div className="flex items-center justify-between mt-2">
+                          <div className="flex items-center border rounded-md">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              disabled={isLoading}
+                              onClick={() => handleUpdateCart("remove", item)}
+                            >
+                              −
+                            </Button>
+                            <div className="w-10 flex justify-center items-center">
+                              {isLoading ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <span className="font-medium text-sm">
+                                  {item.quantity}
+                                </span>
+                              )}
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              disabled={isLoading || item.quantity >= item.stock}
+                              onClick={() => handleUpdateCart("add", item)}
+                            >
+                              +
+                            </Button>
+                          </div>
+                          <p className="font-medium text-right text-base">
+                            ₹{(item.price * item.quantity).toLocaleString()}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="p-6 border-t bg-white">
-              <div className="flex justify-between font-semibold text-lg mb-4">
-                <span>Subtotal</span>
-                <span>₹{total.toLocaleString()}</span>
+                  );
+                })}
               </div>
-              <Button asChild size="lg" className="w-full">
-                <Link href="/checkout" onClick={onClose}>
-                  Proceed to Checkout
-                </Link>
+              <div className="p-6 border-t bg-white">
+                <div className="flex justify-between font-semibold text-lg mb-4">
+                  <span>Subtotal</span>
+                  <span>₹{total.toLocaleString()}</span>
+                </div>
+                {onboardingStep !== null && onboardingStep < 2 ? (
+                  <div className="space-y-3">
+                    <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 text-xs font-semibold text-amber-700 leading-normal">
+                      Complete your B2B profile & primary warehouse address to place orders.
+                    </div>
+                    <Button asChild size="lg" className="w-full">
+                      <Link href="/onboarding" onClick={onClose}>
+                        Complete B2B Profile
+                      </Link>
+                    </Button>
+                  </div>
+                ) : (
+                  <Button asChild size="lg" className="w-full">
+                    <Link href="/checkout" onClick={onClose}>
+                      Proceed to Checkout
+                    </Link>
+                  </Button>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-4">
+              <ShoppingCart className="w-16 h-16 mb-4" />
+              <h3 className="text-lg font-semibold text-foreground">
+                Your cart is empty
+              </h3>
+              <p className="text-sm">
+                Looks like you haven't added anything yet.
+              </p>
+              <Button asChild className="mt-6" onClick={onClose}>
+                <Link href="/">Start Shopping</Link>
               </Button>
             </div>
-          </>
-        ) : (
-          <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-4">
-            <ShoppingCart className="w-16 h-16 mb-4" />
-            <h3 className="text-lg font-semibold text-foreground">
-              Your cart is empty
-            </h3>
-            <p className="text-sm">
-              Looks like you haven't added anything yet.
-            </p>
-            <Button asChild className="mt-6" onClick={onClose}>
-              <Link href="/">Start Shopping</Link>
-            </Button>
-          </div>
-        )}
+          )}
       </SheetContent>
     </Sheet>
   );

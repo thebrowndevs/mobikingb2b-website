@@ -18,6 +18,7 @@ export const homeEndPoints = {
   GET_SEARCH_SUGGESTIONS_API: `${baseUrl}/products/suggestions/search`,
   SEND_OTP_API: `${baseUrl}/users/sendOtp`,
   GET_LOGIN_API: `${baseUrl}/users/login`,
+  GET_SIGNUP_API: `${baseUrl}/users/signup`,
   GET_PRODUCTS_BY_SLUG: `${baseUrl}/products/details`,
 
   GET_PRODUCTS_SLUGS: `${baseUrl}/products/slugs`,
@@ -75,6 +76,15 @@ export const orderEndpoints = {
 }
 
 export const profileEndpoints = {
+  GET_PROFILE_API: `${baseUrl}/users/profile`,
   UPDATE_PROFILE_API: `${baseUrl}/users/profile/update`,
   DELETE_PROFILE_API: `${baseUrl}/users/delete`,
+}
+
+export const onboardingEndpoints = {
+  ONBOARDING_STATUS_API: `${baseUrl}/onboarding/status`,
+  ONBOARDING_CHECK_DUPLICATE: `${baseUrl}/onboarding/check-duplicate`,
+  ONBOARDING_GST_VERIFY: `${baseUrl}/onboarding/gst/verify`,
+  ONBOARDING_SAVE_BUSINESS: `${baseUrl}/onboarding/business`,
+  ONBOARDING_UPDATE_GST: `${baseUrl}/onboarding/gst/update`,
 }

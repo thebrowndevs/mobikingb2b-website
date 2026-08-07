@@ -47,7 +47,7 @@ const mobileNavItems = [
   { label: "Cart", icon: ShoppingCart, onClick: "openCart", notification: "cart" },
   { label: "Orders", href: "/account?tab=orders", icon: ShoppingBag, auth: true },
   { label: "Account", href: "/account", icon: User, auth: true },
-  { label: "Login", icon: User, onClick: "openLogin", auth: false },
+  { label: "Login", href: "/login", icon: User, auth: false },
 ];
 
 export default function Header() {
@@ -153,12 +153,23 @@ export default function Header() {
                   </Button>
                 </>
               ) : (
-                <Button
-                  onClick={() => setLoginOpen(true)}
-                  className="h-9 px-4 text-xs font-semibold shadow-none rounded-full bg-primary text-white hover:bg-primary/95 transition-all"
-                >
-                  Login
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Link href="/login">
+                    <Button
+                      variant="ghost"
+                      className="h-9 px-4 text-xs font-semibold shadow-none rounded-full text-slate-700 hover:bg-slate-50"
+                    >
+                      Login
+                    </Button>
+                  </Link>
+                  <Link href="/register">
+                    <Button
+                      className="h-9 px-4 text-xs font-semibold shadow-none rounded-full bg-primary text-white hover:bg-primary/95 transition-all"
+                    >
+                      Register Free
+                    </Button>
+                  </Link>
+                </div>
               )}
             </div>
           </div>
@@ -203,9 +214,11 @@ export default function Header() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button onClick={actionHandlers.openLogin} aria-label="Login" className="h-8 w-8 p-0 shadow-none rounded-lg">
-                <User size={18} />
-              </Button>
+              <Link href="/login" aria-label="Login">
+                <Button className="h-8 w-8 p-0 shadow-none rounded-lg bg-primary text-white">
+                  <User size={18} />
+                </Button>
+              </Link>
             )}
           </div>
         </div>

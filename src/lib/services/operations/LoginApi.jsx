@@ -2,8 +2,9 @@ import { toast } from "sonner";
 import { apiConnector } from "../apiConnector";
 import { homeEndPoints, profileEndpoints } from "@/lib/api";
 
-const { SEND_OTP_API, GET_LOGIN_API, REFRESH_TOKEN_API, RESET_PASSWORD_API } = homeEndPoints;
+const { SEND_OTP_API, GET_LOGIN_API, GET_SIGNUP_API, REFRESH_TOKEN_API, RESET_PASSWORD_API } = homeEndPoints;
 const {
+  GET_PROFILE_API,
   UPDATE_PROFILE_API,
   DELETE_PROFILE_API
 } = profileEndpoints
@@ -51,6 +52,34 @@ export const loginUser = async (data) => {
     }
   } catch (error) {
     console.error("Error during user login:", error);
+    return {
+      message: error?.response?.data?.message || error?.message
+    };
+  }
+};
+
+export const registerUser = async (data) => {
+  try {
+    const response = await apiConnector("POST", GET_SIGNUP_API, data);
+
+    if (response?.data?.success) {
+      const { user, accessToken, refreshToken } = response.data.data;
+      return {
+        data: {
+          user,
+          accessToken,
+          refreshToken
+        },
+        message: response?.data?.message
+      };
+    } else {
+      console.warn("Registration failed:", response.data?.message);
+      return {
+        message: response?.data?.message
+      };
+    }
+  } catch (error) {
+    console.error("Error during user registration:", error);
     return {
       message: error?.response?.data?.message || error?.message
     };
@@ -141,5 +170,23 @@ export const resetPassword = async (token, newPassword) => {
     return false;
   } finally {
     toast.dismiss(toastId);
+  }
+};
+
+export const fetchProfileApi = async (accessToken) => {
+  try {
+    const { data: apiResponse } = await apiConnector(
+      "GET",
+      GET_PROFILE_API,
+      null,
+      { Authorization: `Bearer ${accessToken}` }
+    );
+    if (!apiResponse?.success) {
+      throw new Error(apiResponse?.message || "Failed to fetch profile");
+    }
+    return apiResponse.data;
+  } catch (error) {
+    console.error("Error in fetchProfileApi:", error);
+    throw error;
   }
 };

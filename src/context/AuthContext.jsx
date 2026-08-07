@@ -6,7 +6,8 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import { refreshTokenApi } from "../lib/services/operations/LoginApi";
+import { refreshTokenApi, fetchProfileApi } from "../lib/services/operations/LoginApi";
+import { getOnboardingStatusApi } from "../lib/services/operations/OnboardingApi";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner"; // <-- Import toast
 import HomeBanners from './../components/layout/Banner';
@@ -19,7 +20,8 @@ export const AuthProvider = ({ children }) => {
   const [refreshToken, setRefreshToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loginOpen, setLoginOpen] = useState(false);
-  const [homeBanners, setHomeBanners] = useState([])
+  const [homeBanners, setHomeBanners] = useState([]);
+  const [onboardingStep, setOnboardingStep] = useState(null);
 
   // Internal logout function that handles state/storage and shows a toast
   const _internalLogout = useCallback(({ message, type = "info" } = {}) => {
@@ -73,6 +75,14 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem("accessToken", newAccessToken);
         localStorage.setItem("refreshToken", newRefreshToken);
         localStorage.setItem("user", JSON.stringify(userToSet));
+
+        // Fetch onboarding step
+        try {
+          const status = await getOnboardingStatusApi(newAccessToken);
+          setOnboardingStep(status.step);
+        } catch (err) {
+          console.error("Error fetching onboarding status in init:", err);
+        }
       } catch (error) {
         console.error(
           "AuthProvider: Initial token validation failed. Forcing logout.",
@@ -159,8 +169,45 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("accessToken", newAccessToken);
     localStorage.setItem("refreshToken", newRefreshToken);
 
+    // Fetch onboarding step
+    try {
+      const status = await getOnboardingStatusApi(newAccessToken);
+      setOnboardingStep(status.step);
+    } catch (err) {
+      console.error("Error fetching onboarding status in login:", err);
+    }
+
     // Show a welcome toast on successful login
     toast.success(`Welcome back, ${newUser.phoneNo || "User"}`);
+  };
+
+  const refreshOnboardingStatus = async () => {
+    if (!accessToken) return;
+    try {
+      const status = await getOnboardingStatusApi(accessToken);
+      setOnboardingStep(status.step);
+      return status.step;
+    } catch (err) {
+      console.error("Error refreshing onboarding status:", err);
+    }
+  };
+
+  const fetchFreshProfile = async () => {
+    if (!accessToken) return;
+    try {
+      const freshUser = await fetchProfileApi(accessToken);
+      if (freshUser) {
+        setUser(freshUser);
+        localStorage.setItem("user", JSON.stringify(freshUser));
+
+        // Sync onboarding status step as well
+        const status = await getOnboardingStatusApi(accessToken);
+        setOnboardingStep(status.step);
+      }
+      return freshUser;
+    } catch (err) {
+      console.error("Error fetching fresh profile:", err);
+    }
   };
 
   // 🔓 Exposed logout function for manual use (e.g., logout button)
@@ -186,7 +233,10 @@ export const AuthProvider = ({ children }) => {
     logout, // This is the clean, manual logout function
     updateUser,
     homeBanners,
-    setHomeBanners
+    setHomeBanners,
+    onboardingStep,
+    refreshOnboardingStatus,
+    fetchFreshProfile
   };
 
   // if (isLoading) {

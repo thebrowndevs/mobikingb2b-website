@@ -1,7 +1,6 @@
 import localFont from "next/font/local";
 import "./globals.css";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import ConditionalLayout from "@/components/layout/ConditionalLayout";
 import { AuthProvider } from "@/context/AuthContext";
 import { Toaster } from "@/components/ui/sonner";
 import React from "react";
@@ -121,10 +120,10 @@ export default function RootLayout({ children }) {
       </head>
       <body className={`${proximaNova.variable} antialiased`}>
         <AuthProvider>
-          <Header />
-          {children}
+          <ConditionalLayout>
+            {children}
+          </ConditionalLayout>
           <Toaster position="top-center" richColors />
-          <Footer />
         </AuthProvider>
 
         <Script
