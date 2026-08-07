@@ -9,10 +9,10 @@ import { SearchBar2 } from "@/components/SearchBar2";
 export default function Home() {
   return (
     <div className="flex flex-col gap-1 bg-[#F6F6F6]">
-      <QrModal />
+      {/* <QrModal /> */}
       <Banner />
       <HomeCategory />
-      <SearchBar2/>
+      <SearchBar2 />
       {/* <Group /> */}
       <Group2 />
     </div>

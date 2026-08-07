@@ -1,4 +1,4 @@
-import { Inter } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -7,9 +7,25 @@ import { Toaster } from "@/components/ui/sonner";
 import React from "react";
 import Script from "next/script";
 
-const font = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
+const proximaNova = localFont({
+  src: [
+    {
+      path: "./fonts/ProximaNovaRegular/ProximaNovaRegular.woff",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "./fonts/ProximaNovaBold/ProximaNovaBold.woff",
+      weight: "700",
+      style: "normal",
+    },
+    {
+      path: "./fonts/ProximaNovaBlack/ProximaNovaBlack.woff",
+      weight: "900",
+      style: "normal",
+    },
+  ],
+  variable: "--font-proxima-nova",
 });
 
 const SITE_NAME = "Mobiking Wholesale";
@@ -103,7 +119,7 @@ export default function RootLayout({ children }) {
           }}
         />
       </head>
-      <body className={`${font.variable} antialiased`}>
+      <body className={`${proximaNova.variable} antialiased`}>
         <AuthProvider>
           <Header />
           {children}

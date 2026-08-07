@@ -2,7 +2,6 @@
 
 import {
   Home,
-  Search,
   Heart,
   LogOut,
   MapIcon,
@@ -28,9 +27,9 @@ import MyCart from "./MyCart";
 import WishlistSheet from "./WishlistSheet";
 import { useAuth } from "@/context/AuthContext";
 import SearchBar from './SearchBar';
+import NavbarLinks from "./NavbarLinks";
 import CategoryMegaMenu from "./CategoryMegaMenu";
-import { quickLinks } from "@/data/footerLinks";
-import { motion, AnimatePresence } from "framer-motion";
+import clsx from "clsx";
 
 export const dynamic = "force-dynamic";
 
@@ -45,7 +44,6 @@ const accountMenuItems = [
 const mobileNavItems = [
   { label: "Home", href: "/", icon: Home },
   { label: "Categories", href: "/categories", icon: LayoutGrid },
-  // { label: "Wishlist", icon: Heart, onClick: "openWishlist", notification: "wishlist" },
   { label: "Cart", icon: ShoppingCart, onClick: "openCart", notification: "cart" },
   { label: "Orders", href: "/account?tab=orders", icon: ShoppingBag, auth: true },
   { label: "Account", href: "/account", icon: User, auth: true },
@@ -55,44 +53,7 @@ const mobileNavItems = [
 export default function Header() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
-  const [isQuickLinksOpen, setIsQuickLinksOpen] = useState(false);
-  const [placeholder, setPlaceholder] = useState("");
-  const [currentPlaceholderIndex, setCurrentPlaceholderIndex] = useState(0);
-  const [charIndex, setCharIndex] = useState(0);
-  const [isTyping, setIsTyping] = useState(true);
   const { isAuthenticated, logout, user, loginOpen, setLoginOpen } = useAuth();
-
-  const placeholderTexts = [
-    "Search for earphones...",
-    "Looking for power bank?",
-    "Find your perfect headphones...",
-    "Browse our collection...",
-  ];
-
-  // Typewriter effect
-  useEffect(() => {
-    const iv = setInterval(() => {
-      const txt = placeholderTexts[currentPlaceholderIndex];
-      if (isTyping) {
-        if (charIndex < txt.length) {
-          setPlaceholder(txt.slice(0, charIndex + 1));
-          setCharIndex((c) => c + 1);
-        } else {
-          setIsTyping(false);
-          setTimeout(() => setIsTyping(true), 2000);
-        }
-      } else {
-        if (charIndex > 0) {
-          setPlaceholder(txt.slice(0, charIndex - 1));
-          setCharIndex((c) => c - 1);
-        } else {
-          setIsTyping(true);
-          setCurrentPlaceholderIndex((i) => (i + 1) % placeholderTexts.length);
-        }
-      }
-    }, 100);
-    return () => clearInterval(iv);
-  }, [charIndex, currentPlaceholderIndex, isTyping]);
 
   const actionHandlers = {
     openWishlist: () => setIsWishlistOpen(true),
@@ -116,209 +77,158 @@ export default function Header() {
   return (
     <>
       {/* Desktop Header */}
-      <header className="sticky top-0 z-40 w-full bg-white border-b shadow-sm hidden md:block">
-        <div className="container mx-auto px-4 py-2 gap-5 flex items-center justify-between max-w-[95vw]">
-          <Link href="/" className="flex-shrink-0 py-2">
-            {/* <Image
-              src={IMAGES.WHITE_LOGO}
-              alt="logo"
-              width={230}
-              height={280}
-              className="w-auto h-auto"
-            /> */}
-
-            <div className="flex items-center gap-1 justify-center">
+      <header className="sticky top-0 z-40 w-full bg-white border-b border-slate-200 shadow-none hidden md:block">
+        <div className="container mx-auto px-4 py-2 flex items-center justify-between max-w-[1400px]">
+          {/* Left: Brand Logo & Title */}
+          <Link href="/" className="flex-shrink-0 py-2 mr-15">
+            <div className="flex items-center gap-1.5 justify-center">
               <img
                 src="/miniLogo.png"
-                alt="Mobiking Wholesale"
-                className="h-14 w-14 object-contain"
+                alt="Mobiking B2B"
+                className="h-12 w-12 object-contain"
               />
               <div>
-                <h1 className="font-bold text-lg -mb-1">Mobiking Wholesale</h1>
-                <p className="text-sm text-gray-500">Wholesale electronics & accessories</p>
+                <h1 className="font-bold text-2xl -mb-1 tracking-tighter text-slate-800">Mobiking B2B</h1>
               </div>
             </div>
           </Link>
 
-          <div className="hidden md:flex items-center gap-4 ml-4">
-            <CategoryMegaMenu />
+          {/* Middle: Category Menu & Inline Navigation Links */}
+          <NavbarLinks />
 
-            <div
-              className="relative"
-              onMouseEnter={() => setIsQuickLinksOpen(true)}
-              onMouseLeave={() => setIsQuickLinksOpen(false)}
-            >
-              <Button variant="ghost" className="flex items-center gap-1 text-gray-700 hover:text-primary font-medium">
-                <span>Quick Links</span>
-                <ChevronDown size={16} className={`text-gray-500 transition-transform duration-300 ${isQuickLinksOpen ? "rotate-180" : ""}`} />
-              </Button>
+          {/* Right: Search bar & User/Cart Controls */}
+          <div className="flex items-center gap-4 ml-auto">
+            <Suspense fallback={
+              <div className="h-9 w-48 bg-slate-50 border border-slate-200 rounded-full animate-pulse" />
+            }>
+              <SearchBar />
+            </Suspense>
 
-              <AnimatePresence>
-                {isQuickLinksOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-[100]"
-                  >
-                    {quickLinks.map((link) => (
-                      <Link
-                        key={link.title}
-                        href={link.url}
-                        className="block px-3 py-2 text-sm text-gray-700 hover:bg-slate-50 hover:text-primary rounded-md transition-colors"
-                        onClick={() => setIsQuickLinksOpen(false)}
-                      >
-                        {link.title}
-                      </Link>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </div>
+            <div className="flex items-center gap-1.5">
+              {isAuthenticated ? (
+                <>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="flex items-center gap-1 shadow-none font-semibold h-9 w-9 p-0 rounded-full hover:bg-slate-50">
+                        <User size={18} className="text-slate-700" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56 p-2 rounded-xl border border-slate-200 shadow-none">
+                      {accountMenuItems.map((item, i) => item.auth && !isAuthenticated ? null : item.type === "separator" ? (
+                        <DropdownMenuSeparator key={i} className="bg-slate-100" />
+                      ) : (
+                        <DropdownMenuItem key={item.label} onClick={item.onClick ? actionHandlers[item.onClick] : undefined} asChild={!!item.href} className={clsx("rounded-lg font-semibold text-xs py-2", item.isDestructive ? "text-red-600 hover:bg-red-50" : "hover:bg-gray-50")}>
+                          {item.href ? (
+                            <Link href={item.href} className="flex items-center gap-2 w-full">
+                              <item.icon size={14} />
+                              <span>{item.label}</span>
+                            </Link>
+                          ) : (
+                            <div className="flex items-center gap-2 w-full cursor-pointer">
+                              <item.icon size={14} />
+                              <span>{item.label}</span>
+                            </div>
+                          )}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
 
-          {/* Search Bar */}
-          <Suspense fallback={
-            <div
-              className="flex items-center gap-2 border rounded-sm px-3 py-1.5"
-            >
-              <input
-                className="text-sm text-gray-700 w-full outline-none"
-                placeholder={placeholder}
-              />
+                  <Button variant="ghost" className="relative p-0 h-9 w-9 rounded-full hover:bg-slate-50 shadow-none flex items-center justify-center" onClick={() => setIsWishlistOpen(true)}>
+                    <Heart size={18} className="text-slate-700" />
+                    {getNotificationCount("wishlist") > 0 && (
+                      <span className="absolute top-0 right-0 bg-primary text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center font-bold">
+                        {getNotificationCount("wishlist")}
+                      </span>
+                    )}
+                  </Button>
 
-              <button
-                type="button"
-                className="cursor-pointer text-gray-500 hover:text-gray-800"
-              >
-                <Search size={18} className="" />
-              </button>
-            </div>
-          }>
-            <SearchBar />
-          </Suspense>
-
-          {/* Address, Profile Container */}
-          <div className="flex items-center gap-2">
-
-            {/* <LocationSelector /> */}
-            {isAuthenticated ? (
-              <>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="flex items-center gap-1">
-                      <User size={20} />
-                      {/* <span>Account</span> */}
-                      <ChevronDown size={16} className="text-gray-500" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 p-2 rounded-lg">
-                    {accountMenuItems.map((item, i) => item.auth && !isAuthenticated ? null : item.type === "separator" ? (
-                      <DropdownMenuSeparator key={i} />
-                    ) : (
-                      <DropdownMenuItem key={item.label} onClick={item.onClick ? actionHandlers[item.onClick] : undefined} asChild={!!item.href} className={item.isDestructive ? "text-red-600 hover:bg-red-50" : "hover:bg-gray-50"}>
-                        {item.href ? (
-                          <Link href={item.href} className="flex items-center gap-2">
-                            <item.icon size={16} />
-                            <span>{item.label}</span>
-                          </Link>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <item.icon size={16} />
-                            <span>{item.label}</span>
-                          </div>
-                        )}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <Button variant="ghost" className="relative p-2" onClick={() => setIsWishlistOpen(true)}>
-                  <Heart size={50} />
-                  {getNotificationCount("wishlist") > 0 && <span className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">{getNotificationCount("wishlist")}</span>}
+                  <Button variant="ghost" className="relative p-0 h-9 w-9 rounded-full hover:bg-slate-50 shadow-none flex items-center justify-center" onClick={() => setIsCartOpen(true)}>
+                    <ShoppingCart size={18} className="text-slate-700" />
+                    {getNotificationCount("cart") > 0 && (
+                      <span className="absolute top-0 right-0 bg-primary text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center font-bold">
+                        {getNotificationCount("cart")}
+                      </span>
+                    )}
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  onClick={() => setLoginOpen(true)}
+                  className="h-9 px-4 text-xs font-semibold shadow-none rounded-full bg-primary text-white hover:bg-primary/95 transition-all"
+                >
+                  Login
                 </Button>
-                <Button variant="ghost" className="relative p-2" onClick={() => setIsCartOpen(true)}>
-                  <ShoppingCart size={30} />
-                  {getNotificationCount("cart") > 0 && <span className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">{getNotificationCount("cart")}</span>}
-                </Button>
-              </>
-            ) : (
-              <Button onClick={() => setLoginOpen(true)} className="px-4 py-2">Login</Button>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Mobile Logo Row (scrolls off) */}
-      <div className="md:hidden bg-white -mb2">
-        <div className="flex items-center justify-between px-4 py-0">
+      {/* Mobile Logo Row */}
+      <div className="md:hidden bg-white border-b border-slate-150 shadow-none py-1.5">
+        <div className="flex items-center justify-between px-4 py-1.5">
           <Link href="/" className="flex-shrink-0">
-            <div className="flex items-center justify-center">
+            <div className="flex items-center gap-1.5">
               <img
-                src="/mobikingNew.png"
-                alt="Mobiking Logo"
-                width={130}
-                height={65}
-                className="object-contain"
-                style={{ WebkitUserDrag: "none" }}
+                src="/miniLogo.png"
+                alt="Mobiking B2B"
+                className="h-9 w-9 object-contain"
               />
+              <div>
+                <h1 className="font-bold text-sm tracking-tighter text-slate-800">Mobiking B2B</h1>
+                <p className="text-[9px] text-gray-500 font-medium">B2B Electronics</p>
+              </div>
             </div>
           </Link>
 
-          <div className="md:hidden flex items-center">
-            <CategoryMegaMenu />
+          <div className="flex items-center gap-2">
+            <div className="md:hidden flex items-center">
+              <CategoryMegaMenu />
+            </div>
+
+            {isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" aria-label="Account" className="h-8 w-8 border-slate-200 shadow-none rounded-lg">
+                    <User size={18} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 p-2 rounded-xl border border-slate-200 shadow-none">
+                  {accountMenuItems.map((item, i) => item.auth && !isAuthenticated ? null : item.type === "separator" ? <DropdownMenuSeparator key={i} className="bg-slate-100" /> : (
+                    <DropdownMenuItem key={item.label} onClick={item.onClick ? actionHandlers[item.onClick] : undefined} asChild={!!item.href} className="font-semibold rounded-lg text-xs py-2">
+                      {item.href ? <Link href={item.href} className="flex items-center gap-2 w-full"><item.icon size={14} /><span>{item.label}</span></Link> : <div className="flex items-center gap-2 w-full"><item.icon size={14} /><span>{item.label}</span></div>}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button onClick={actionHandlers.openLogin} aria-label="Login" className="h-8 w-8 p-0 shadow-none rounded-lg">
+                <User size={18} />
+              </Button>
+            )}
           </div>
-
-          {/* <QrModal /> */}
-
-          {isAuthenticated ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" aria-label="Account" className="h-10 w-10">
-                  <User size={28} />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 p-2 rounded-lg">
-                {accountMenuItems.map((item, i) => item.auth && !isAuthenticated ? null : item.type === "separator" ? <DropdownMenuSeparator key={i} /> : (
-                  <DropdownMenuItem key={item.label} onClick={item.onClick ? actionHandlers[item.onClick] : undefined} asChild={!!item.href}>
-                    {item.href ? <Link href={item.href} className="flex items-center gap-2"><item.icon size={16} /><span>{item.label}</span></Link> : <div className="flex items-center gap-2"><item.icon size={16} /><span>{item.label}</span></div>}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <Button onClick={actionHandlers.openLogin} aria-label="Login" className="h-10 w-10">
-              <User size={28} />
-            </Button>
-          )}
         </div>
       </div>
 
-      {/* Mobile Search Row (sticky) */}
-      {/* <div className="sticky top-0 z-40 lg:hidden bg-white border-b shadow-sm">
-        <div className="px-4 py-2">
-          <SearchSection />
-        </div>
-      </div> */}
-
       {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 w-full bg-white border-t shadow-sm md:hidden z-[50]">
+      <nav className="fixed bottom-0 w-full bg-white border-t border-slate-200 shadow-none md:hidden z-[50]">
         <div className="flex justify-around items-center h-16">
           {visibleMobileNavItems.map(item => (
             item.href ? (
               <Link key={item.label} href={item.href} className="flex-1 text-center py-2">
-                <div className="relative flex flex-col items-center gap-1">
-                  <item.icon size={24} className="text-gray-600 hover:text-primary" />
-                  <span className="text-xs">{item.label}</span>
-                  {item.notification && getNotificationCount(item.notification) > 0 && <span className="absolute top-0 right-0 bg-primary text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center transform translate-x-1/4 -translate-y-1/4">{getNotificationCount(item.notification)}</span>}
+                <div className="relative flex flex-col items-center gap-1 text-gray-500 hover:text-primary">
+                  <item.icon size={20} />
+                  <span className="text-[10px] font-bold">{item.label}</span>
+                  {item.notification && getNotificationCount(item.notification) > 0 && <span className="absolute top-0 right-3 bg-primary text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">{getNotificationCount(item.notification)}</span>}
                 </div>
               </Link>
             ) : (
-              <button key={item.label} onClick={actionHandlers[item.onClick]} className="flex-1 text-center py-2">
-                <div className="relative flex flex-col items-center gap-1">
-                  <item.icon size={24} className="text-gray-600 hover:text-primary" />
-                  <span className="text-xs">{item.label}</span>
-                  {item.notification && getNotificationCount(item.notification) > 0 && <span className="absolute top-0 right-6 bg-primary text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center transform translate-x-1/4 -translate-y-1/4">{getNotificationCount(item.notification)}</span>}
+              <button key={item.label} onClick={actionHandlers[item.onClick]} className="flex-1 text-center py-2 bg-transparent border-0 focus:outline-none">
+                <div className="relative flex flex-col items-center gap-1 text-gray-500 hover:text-primary">
+                  <item.icon size={20} />
+                  <span className="text-[10px] font-bold">{item.label}</span>
+                  {item.notification && getNotificationCount(item.notification) > 0 && <span className="absolute top-0 right-3 bg-primary text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">{getNotificationCount(item.notification)}</span>}
                 </div>
               </button>
             )

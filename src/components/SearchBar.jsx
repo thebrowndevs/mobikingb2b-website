@@ -12,8 +12,6 @@ export default function SearchBar() {
   const searchKey = searchParams.get("searchKey");
   const searchQuery = searchParams.get("q");
 
-  // -- Removed custom placeholder typewriter logic --
-  // Use `react-simple-typewriter` hook for animated placeholder text
   const [animatedPlaceholder] = useTypewriter({
     words: [
       "Search for earphones...",
@@ -21,7 +19,7 @@ export default function SearchBar() {
       "Find your perfect headphones...",
       "Browse our collection...",
     ],
-    loop: 100, // 0 or false => infinite loop
+    loop: 100,
     typeSpeed: 50,
     deleteSpeed: 20,
     delaySpeed: 100,
@@ -49,9 +47,6 @@ export default function SearchBar() {
           );
           setShowDropdown(true);
         })
-        .then(() => {
-          console.log("Results", results);
-        })
         .catch(() => {
           setResults([]);
           setShowDropdown(false);
@@ -65,22 +60,28 @@ export default function SearchBar() {
     };
   }, [query]);
 
-  // Input Query Search
   const handleQuerySubmit = () => {
     if (!query) return;
     if (query.length <= 2) return;
-    console.log(query);
     router.push(`/s?q=${encodeURIComponent(query)}`);
     setShowDropdown(false);
   };
 
   return (
-    <div className="relative flex-1 mx-2">
+    <div className="relative flex-1 max-w-[400px] mx-2">
       {/* Search Box */}
-      <div className="flex items-center gap-2 border rounded-sm px-3 py-1.5">
-       <input
-          className="text-sm text-gray-700 w-full outline-none"
-          placeholder={query ? "" : animatedPlaceholder} // animated placeholder when input empty
+      <div className="flex items-center gap-2 border border-slate-200 rounded-full px-4 py-2 bg-slate-50/50 focus-within:border-slate-350 focus-within:bg-white transition-all shadow-none">
+        <button
+          type="button"
+          onClick={handleQuerySubmit}
+          className="cursor-pointer text-slate-400 hover:text-slate-700 transition-colors"
+        >
+          <Search size={16} />
+        </button>
+        
+        <input
+          className="text-xs text-slate-700 w-full outline-none bg-transparent"
+          placeholder={query ? "" : animatedPlaceholder}
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
@@ -96,36 +97,27 @@ export default function SearchBar() {
             if (query && results.length > 0) setShowDropdown(true);
           }}
         />
-        {/* cursor near the input so user feels typewriter effect */}
         {!query && (
-          <span className="select-none text-sm ml-1">
+          <span className="select-none text-xs text-slate-400 -ml-1">
             <Cursor cursorStyle="|" />
           </span>
         )}
-
-        <button
-          type="button"
-          onClick={handleQuerySubmit}
-          className="cursor-pointer text-gray-500 hover:text-gray-800"
-        >
-          <Search size={18} className="" />
-        </button>
       </div>
 
-      {/* Dropdown */}
+      {/* Dropdown suggestions */}
       {showDropdown && results.length > 0 && (
-        <div className="absolute top-full left-0 w-full mt-1 bg-white border rounded-sm shadow-lg max-h-64 overflow-y-auto z-50">
+        <div className="absolute top-full left-0 w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-none max-h-64 overflow-y-auto z-50 p-1">
           {results.map((item, idx) => (
             <Link
               key={idx}
-              href={`/s?searchKey=${encodeURIComponent(item)}`} // adjust route as per your backend
-              className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 transition"
+              href={`/s?searchKey=${encodeURIComponent(item)}`}
+              className="flex items-center gap-2 px-3.5 py-2.5 hover:bg-slate-50 rounded-lg transition text-slate-700 text-xs font-semibold"
             >
-              <span className="text-sm text-gray-700">{item}</span>
+              <span>{item}</span>
             </Link>
           ))}
           {isLoading && (
-            <div className="px-3 py-2 text-sm text-gray-400">Loading...</div>
+            <div className="px-3 py-2 text-xs text-slate-400 font-semibold">Loading suggestions...</div>
           )}
         </div>
       )}

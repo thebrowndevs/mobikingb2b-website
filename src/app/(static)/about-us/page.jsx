@@ -1,174 +1,204 @@
 'use client';
 
 import React from 'react';
+import { ShieldCheck, Truck, Percent, CheckCircle2, Building2, HelpCircle } from 'lucide-react';
 
 export default function AboutPage() {
     return (
-        <div className="max-w-7xl mx-auto px-6 py-12">
-            {/* HERO */}
-            <section className="grid gap-8 md:grid-cols-2 items-center">
+        <div className="max-w-[1400px] mx-auto px-6 py-16">
+
+            {/* HERO SECTION */}
+            <section className="grid gap-12 md:grid-cols-2 items-center mb-20">
                 <div>
-                    <h2 className="text-4xl font-extrabold leading-tight">About Mobiking Wholesale</h2>
-                    <p className="mt-4 text-gray-700">
-                        Mobiking Wholesale is a dedicated wholesale supplier of electronic accessories — from headphones and earbuds to speakers and chargers.
-                        We source quality products and pass the savings to retailers and resellers. Our promise:{' '}
-                        <strong className="text-indigo-600">the cheapest prices in the market</strong> without compromising on product quality.
+                    <span className="text-sm font-bold text-primary tracking-widest uppercase bg-slate-100 px-3.5 py-1.5 rounded-full">
+                        India's Premier B2B Hub
+                    </span>
+                    <h2 className="text-4xl font-bold leading-tight text-slate-800 tracking-tighter mt-5">
+                        We Power Retailers with Factory-Direct Sourcing
+                    </h2>
+                    <p className="mt-2 text-sm text-slate-400 font-semibold uppercase tracking-wider">
+                        Mobiking B2B Sourcing & Logistics
+                    </p>
+                    <p className="mt-5 text-[19px] text-slate-600 leading-relaxed font-medium">
+                        Mobiking B2B is a dedicated business-to-business distribution platform. We streamline supply chains for mobile accessories and consumer electronics by connecting retail stores, regional distributors, and e-commerce merchants directly with leading manufacturers. We eliminate middlemen commissions to deliver unmatched margin opportunities for your business.
                     </p>
 
                     <div className="mt-6 flex gap-3">
                         <a
                             href="/categories"
-                            className="inline-block rounded-md bg-indigo-600 px-5 py-3 text-white font-medium shadow-md hover:bg-indigo-700"
+                            className="inline-block rounded-full bg-primary px-6 py-2.5 text-sm font-bold shadow-none hover:bg-primary/95 transition-all text-white"
                         >
-                            Browse Products
+                            Explore Wholesale Catalog
                         </a>
-                        <a href="/contact" className="inline-block rounded-md border px-5 py-3 text-gray-700 hover:bg-gray-100">
-                            Contact Sales
+                        <a
+                            href="/contact"
+                            className="inline-block rounded-full border border-slate-200 px-6 py-2.5 text-slate-700 text-sm font-bold hover:bg-slate-50 transition-all bg-white"
+                        >
+                            Become a Partner
                         </a>
                     </div>
                 </div>
 
                 <div className="relative">
                     <img
-                        src="/about-hero.png"
-                        alt="Electronics showcase"
-                        className="w-full rounded-xl shadow-lg object-cover h-72 md:h-96"
+                        src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80&w=1000"
+                        alt="B2B Logistics Warehouse"
+                        className="w-full rounded-2xl shadow-none border border-slate-150 object-cover h-80 md:h-96"
                     />
                 </div>
             </section>
 
-            {/* OUR PROMISE / VALUE */}
-            <section className="mt-14 bg-gradient-to-r from-white to-indigo-50 rounded-xl p-8">
-                <div className="md:flex gap-5 md:items-center md:justify-between">
-                    <div>
-                        <h3 className="text-2xl font-bold">Our Promise: Lowest Market Prices</h3>
-                        <p className="mt-2 text-gray-700 max-w-2xl">
-                            We negotiate with manufacturers and maintain lean operations so we can offer the most competitive wholesale prices
-                            on popular accessories like headphones, earbuds, Bluetooth speakers, chargers and more. Buy in bulk and save more.
+            {/* THREE CORE PILLARS */}
+            <section className="mb-20">
+                <div className="text-center max-w-2xl mx-auto mb-12">
+                    <h3 className="text-3xl font-bold text-slate-800 tracking-tighter">Our Core Infrastructure Pillars</h3>
+                    <p className="text-slate-500 text-base mt-1 font-medium">How we maintain the highest efficiency and quality standard for wholesale buyers.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    {/* Pillar 1 */}
+                    <div className="bg-white border border-slate-150 rounded-2xl p-6 shadow-none">
+                        <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-primary mb-4 border border-slate-100">
+                            <Building2 size={20} />
+                        </div>
+                        <h4 className="font-bold text-slate-800 text-xl">Direct Factory Alliances</h4>
+                        <p className="mt-2 text-[19px] text-slate-600 leading-relaxed font-medium">
+                            By working directly with certified manufacturing plants, we procure inventory at baseline production costs, passing pure profit margin back to our retail buyers.
                         </p>
                     </div>
 
-                    <div className="mt-6 md:mt-0 grid grid-cols-2 gap-4 md:grid-cols-3">
-                        <div className="p-4 bg-white rounded-lg shadow-sm">
-                            <h4 className="font-semibold">Bulk Discounts</h4>
-                            <p className="text-sm text-gray-600">Higher quantity = better pricing tiers.</p>
+                    {/* Pillar 2 */}
+                    <div className="bg-white border border-slate-150 rounded-2xl p-6 shadow-none">
+                        <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-primary mb-4 border border-slate-100">
+                            <ShieldCheck size={20} />
                         </div>
-                        <div className="p-4 bg-white rounded-lg shadow-sm">
-                            <h4 className="font-semibold">Quality Checked</h4>
-                            <p className="text-sm text-gray-600">Products inspected before dispatch.</p>
+                        <h4 className="font-bold text-slate-800 text-xl">QC Inspection Facility</h4>
+                        <p className="mt-2 text-[19px] text-slate-600 leading-relaxed font-medium">
+                            Every single batch undergoes standard quality assessment checks at our warehouse hub, reducing defect ratios to less than 0.5% before final dispatch.
+                        </p>
+                    </div>
+
+                    {/* Pillar 3 */}
+                    <div className="bg-white border border-slate-150 rounded-2xl p-6 shadow-none">
+                        <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-primary mb-4 border border-slate-100">
+                            <Truck size={20} />
                         </div>
-                        <div className="p-4 bg-white rounded-lg shadow-sm">
-                            <h4 className="font-semibold">Fast Shipping</h4>
-                            <p className="text-sm text-gray-600">Reliable logistics for nationwide delivery.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* PRODUCTS SHOWCASE */}
-            <section className="mt-14">
-                <h3 className="text-2xl font-bold">Featured Categories</h3>
-                <p className="text-gray-600 mt-2">Top-selling product categories we supply to retailers and resellers.</p>
-
-                <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {/* Card 1 */}
-                    <div className="bg-white rounded-xl p-4 shadow hover:shadow-md transition">
-                        <img
-                            src="/headphones.jpeg"
-                            alt="Headphones"
-                            className="w-full h-52 object-cover rounded-md"
-                        />
-                        <h4 className="mt-3 font-semibold">Headphones</h4>
-                        <p className="text-sm text-gray-600 mt-1">Over-ear & on-ear options — wired and wireless.</p>
-                    </div>
-
-                    {/* Card 2 */}
-                    <div className="bg-white rounded-xl p-4 shadow hover:shadow-md transition">
-                        <img
-                            src="/buds.jpeg"
-                            alt="Earbuds"
-                            className="w-full h-52 object-cover rounded-md"
-                        />
-                        <h4 className="mt-3 font-semibold">Earbuds</h4>
-                        <p className="text-sm text-gray-600 mt-1">True wireless and sport-friendly models.</p>
-                    </div>
-
-                    {/* Card 3 */}
-                    <div className="bg-white rounded-xl p-4 shadow hover:shadow-md transition">
-                        <img
-                            src="/speakers.jpeg"
-                            alt="Speakers"
-                            className="w-full h-52 object-cover rounded-md"
-                        />
-                        <h4 className="mt-3 font-semibold">Speakers</h4>
-                        <p className="text-sm text-gray-600 mt-1">Bluetooth speakers — portable and party-ready.</p>
-                    </div>
-
-                    {/* Card 4 */}
-                    <div className="bg-white rounded-xl p-4 shadow hover:shadow-md transition">
-                        <img
-                            src="/accessories.jpeg"
-                            alt="Accessories"
-                            className="w-full h-52 object-cover rounded-md"
-                        />
-                        <h4 className="mt-3 font-semibold">Accessories</h4>
-                        <p className="text-sm text-gray-600 mt-1">Cables, chargers, cases and more.
+                        <h4 className="font-bold text-slate-800 text-xl">Bulk Fulfillment Network</h4>
+                        <p className="mt-2 text-[19px] text-slate-600 leading-relaxed font-medium">
+                            Partnered with India's leading surface cargo and air shipping carriers to ensure fast, secure bulk parcel delivery directly to your store's doorstep.
                         </p>
                     </div>
                 </div>
             </section>
 
-            {/* WHY CHOOSE US */}
-            <section className="mt-14 bg-white rounded-xl p-8 shadow-sm">
-                <h3 className="text-2xl font-bold">Why Choose Mobiking Wholesale?</h3>
-                <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* PARTNERSHIP BENEFITS */}
+            <section className="bg-white border border-slate-150 rounded-2xl p-8 md:p-10 shadow-none mb-20">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
                     <div>
-                        <h4 className="font-semibold">Competitive Pricing</h4>
-                        <p className="text-gray-600 text-sm mt-1">We price-match and ensure you get the lowest market price for comparable items.</p>
+                        <span className="text-sm font-bold text-primary uppercase tracking-widest">Growth Partnerships</span>
+                        <h3 className="text-3xl font-bold text-slate-800 tracking-tighter mt-1">Scale Your Business Margins</h3>
+                        <p className="mt-3 text-[19px] text-slate-600 leading-relaxed font-medium">
+                            Mobiking B2B acts as your remote inventory department. Our wholesale portal provides real-time catalog pricing, live container dispatch status, and custom invoice management to ease GST filing and compliance.
+                        </p>
+
+                        <div className="mt-6 space-y-3.5">
+                            <div className="flex items-start gap-2.5">
+                                <CheckCircle2 size={18} className="text-primary mt-0.5 shrink-0" />
+                                <span className="text-[19px] text-slate-600 leading-relaxed font-medium">Flexible minimum order thresholds for growing shops.</span>
+                            </div>
+                            <div className="flex items-start gap-2.5">
+                                <CheckCircle2 size={18} className="text-primary mt-0.5 shrink-0" />
+                                <span className="text-[19px] text-slate-600 leading-relaxed font-medium">Authorized GST Invoices with split breakdown mapping.</span>
+                            </div>
+                            <div className="flex items-start gap-2.5">
+                                <CheckCircle2 size={18} className="text-primary mt-0.5 shrink-0" />
+                                <span className="text-[19px] text-slate-600 leading-relaxed font-medium">Live support from a dedicated account representative.</span>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <h4 className="font-semibold">Trusted Sourcing</h4>
-                        <p className="text-gray-600 text-sm mt-1">Longstanding relationships with factories and verified suppliers.</p>
-                    </div>
-                    <div>
-                        <h4 className="font-semibold">Dedicated Support</h4>
-                        <p className="text-gray-600 text-sm mt-1">Account managers and quick responses for bulk buyers.</p>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="p-6 bg-slate-50/50 border border-slate-150 rounded-xl text-center">
+                            <div className="text-4xl font-bold text-primary">15+</div>
+                            <div className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1.5">Product Categories</div>
+                        </div>
+                        <div className="p-6 bg-slate-50/50 border border-slate-150 rounded-xl text-center">
+                            <div className="text-4xl font-bold text-primary">5000+</div>
+                            <div className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1.5">Active Resellers</div>
+                        </div>
+                        <div className="p-6 bg-slate-50/50 border border-slate-150 rounded-xl text-center">
+                            <div className="text-4xl font-bold text-primary">100%</div>
+                            <div className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1.5">GST Compliant</div>
+                        </div>
+                        <div className="p-6 bg-slate-50/50 border border-slate-150 rounded-xl text-center">
+                            <div className="text-4xl font-bold text-primary">&lt;0.5%</div>
+                            <div className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1.5">Defect Ratio</div>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            {/* TESTIMONIALS + CTA */}
-            {/* <section className="mt-14">
-                <div className="rounded-xl bg-indigo-600 text-white p-8 md:flex md:items-center md:justify-between">
-                    <div>
-                        <h3 className="text-2xl font-bold">Ready to stock the best accessories at the best prices?</h3>
-                        <p className="mt-2 text-indigo-100">Register as a reseller or drop us a message to get exclusive wholesale tiers.</p>
-                    </div>
-
-                    <div className="mt-6 md:mt-0">
-                        <a href="/signup" className="rounded-md bg-white px-5 py-3 font-medium text-indigo-600">
-                            Create an Account
-                        </a>
-                    </div>
+            {/* PRODUCT ADVISORY GRID */}
+            <section className="mb-20">
+                <div className="mb-8 text-center md:text-left">
+                    <h3 className="text-3xl font-bold text-slate-800 tracking-tighter">Sourcing Hotspots</h3>
+                    <p className="text-slate-500 text-base mt-1 font-medium">Bulk inventory lines that consistently offer the highest ROI for retailers.</p>
                 </div>
 
-                <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <blockquote className="p-4 bg-white rounded shadow">
-                        <p className="text-gray-700">"Great wholesale pricing and fast shipping — helped scale our retail business."</p>
-                        <footer className="mt-3 text-sm text-gray-500">— Riya, Mumbai</footer>
-                    </blockquote>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {/* Item 1 */}
+                    <div className="bg-white rounded-xl border border-slate-150 p-4 shadow-none hover:border-slate-350 transition-all duration-300">
+                        <div className="rounded-lg overflow-hidden h-44 bg-slate-50 border border-slate-100">
+                            <img
+                                src="https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&q=80&w=600"
+                                alt="Wireless Earbuds Sourcing"
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
+                        <h4 className="mt-4 font-bold text-slate-800 text-[18px]">Acoustic Audio</h4>
+                        <p className="mt-1.5 text-[19px] text-slate-600 leading-relaxed font-medium">True wireless earbuds, neckbands, and portable speakers.</p>
+                    </div>
 
-                    <blockquote className="p-4 bg-white rounded shadow">
-                        <p className="text-gray-700">"Excellent packaging and product quality. Reorder every month."</p>
-                        <footer className="mt-3 text-sm text-gray-500">— Ahmed, Delhi</footer>
-                    </blockquote>
+                    {/* Item 2 */}
+                    <div className="bg-white rounded-xl border border-slate-150 p-4 shadow-none hover:border-slate-350 transition-all duration-300">
+                        <div className="rounded-lg overflow-hidden h-44 bg-slate-50 border border-slate-100">
+                            <img
+                                src="https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&q=80&w=600"
+                                alt="Chargers Sourcing"
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
+                        <h4 className="mt-4 font-bold text-slate-800 text-[18px]">Power Supplies</h4>
+                        <p className="mt-1.5 text-[19px] text-slate-600 leading-relaxed font-medium">Fast adapters, multiport hubs, and safe powerbanks.</p>
+                    </div>
 
-                    <blockquote className="p-4 bg-white rounded shadow">
-                        <p className="text-gray-700">"Competitive tiers for large orders and helpful account manager."</p>
-                        <footer className="mt-3 text-sm text-gray-500">— Priya, Bangalore</footer>
-                    </blockquote>
+                    {/* Item 3 */}
+                    <div className="bg-white rounded-xl border border-slate-150 p-4 shadow-none hover:border-slate-350 transition-all duration-300">
+                        <div className="rounded-lg overflow-hidden h-44 bg-slate-50 border border-slate-100">
+                            <img
+                                src="https://images.unsplash.com/photo-1611532736597-de2d4265fba3?auto=format&fit=crop&q=80&w=600"
+                                alt="Smart Gadgets Sourcing"
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
+                        <h4 className="mt-4 font-bold text-slate-800 text-[18px]">Wearable Devices</h4>
+                        <p className="mt-1.5 text-[19px] text-slate-600 leading-relaxed font-medium">Fitness smartwatches, screen protectors, and watch straps.</p>
+                    </div>
+
+                    {/* Item 4 */}
+                    <div className="bg-white rounded-xl border border-slate-150 p-4 shadow-none hover:border-slate-350 transition-all duration-300">
+                        <div className="rounded-lg overflow-hidden h-44 bg-slate-50 border border-slate-100">
+                            <img
+                                src="https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&q=80&w=600"
+                                alt="Mobile cables and tools Sourcing"
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
+                        <h4 className="mt-4 font-bold text-slate-800 text-[18px]">Utility Accessories</h4>
+                        <p className="mt-1.5 text-[19px] text-slate-600 leading-relaxed font-medium">Wired connectors, OTG keys, mounts, and tool kits.</p>
+                    </div>
                 </div>
-            </section> */}
+            </section>
         </div>
     );
 }

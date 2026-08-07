@@ -72,16 +72,16 @@ export default function CategoryMegaMenu() {
 
   const triggerButton = (
     <button
-      className={`flex items-center gap-1.5 px-2 sm:px-4 py-2 text-xs sm:text-sm font-semibold transition-all rounded-lg ${isOpen
-        ? "bg-[#002244]/5 text-[#002244] ring-1 ring-[#002244]/10"
-        : "text-slate-600 hover:bg-slate-100 hover:text-[#002244]"
+      className={`flex items-center gap-1.5 text-lg text-primary tracking-tight transition-all focus:outline-none bg-transparent border-0 cursor-pointer font-medium ${isOpen
+        ? "text-primary/80"
+        : "text-primary hover:text-primary/80"
         }`}
     >
-      <LayoutGrid size={18} className={isOpen ? "text-[#002244]" : "text-slate-400"} />
-      <span className="hidden min-[400px]:inline">Categories</span>
+      <LayoutGrid size={18} className="text-slate-400" />
+      <span>Categories</span>
       <ChevronDown
-        size={12}
-        className={`transition-transform duration-300 ${isOpen ? "rotate-180" : "opacity-60"}`}
+        size={14}
+        className={`transition-transform duration-300 ${isOpen ? "rotate-180" : "opacity-65"}`}
       />
     </button>
   );

@@ -13,7 +13,6 @@ export async function generateMetadata({ params }) {
       };
     }
 
-    // Extract configurations from blog's SEO schema
     const seo = blog.seo || {};
     const title = seo.metaTitle || `${blog.title} | Mobiking Wholesale Blog`;
     const description = seo.metaDescription || blog.excerpt || blog.title;
@@ -53,9 +52,9 @@ export default async function SingleBlogPage({ params }) {
 
   if (!blog) {
     return (
-      <div className="text-center py-20 bg-gray-50 min-h-[60vh]">
-        <h1 className="text-2xl font-bold text-gray-800">Blog Post Not Found</h1>
-        <p className="text-gray-500 mt-2">The article you are looking for does not exist or has been removed.</p>
+      <div className="text-center py-20 bg-white min-h-[60vh]">
+        <h1 className="text-2xl font-bold text-slate-800 tracking-tighter">Blog Post Not Found</h1>
+        <p className="text-slate-500 mt-2 text-sm font-medium">The article you are looking for does not exist or has been removed.</p>
       </div>
     );
   }
@@ -100,27 +99,6 @@ export default async function SingleBlogPage({ params }) {
     }))
   } : null;
 
-  // 3. Product Schema for promoted products
-  const hasProducts = blog.promotedProducts && blog.promotedProducts.length > 0;
-  const productSchemas = hasProducts ? blog.promotedProducts.map(product => {
-    const displayPrice = product.sellingPrice?.[product.sellingPrice?.length - 1]?.price || 0;
-    return {
-      "@context": "https://schema.org",
-      "@type": "Product",
-      "name": product.fullName || product.name,
-      "image": product.images || [],
-      "description": product.description || "",
-      "sku": product.sku || "",
-      "offers": {
-        "@type": "Offer",
-        "url": `https://mobikingwholesale.com/ps/${product.slug}`,
-        "priceCurrency": "INR",
-        "price": displayPrice,
-        "availability": product.totalStock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
-      }
-    };
-  }) : [];
-
   return (
     <>
       {/* Inject Structured Data Scripts */}
@@ -134,13 +112,6 @@ export default async function SingleBlogPage({ params }) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
         />
       )}
-      {productSchemas.map((pSchema, idx) => (
-        <script
-          key={idx}
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(pSchema) }}
-        />
-      ))}
       
       <BlogClient blog={blog} />
     </>
