@@ -21,80 +21,153 @@ import { getRelatedProductsBySlug } from "@/lib/services/operations/HomeApi";
 
 export default function ProductClient({ product }) {
     const [currentImage, setCurrentImage] = useState(0);
-    const [selectedVariant, setSelectedVariant] = useState("");
+    const [selectedVariantId, setSelectedVariantId] = useState("");
+    const [qty, setQty] = useState(60);
     const [isActionLoading, setIsActionLoading] = useState(false);
 
     const { user, accessToken, setUser, setLoginOpen } = useAuth();
 
-    //      useEffect(() => {
-    //     if (product?.variants && typeof product.variants === "object") {
-    //       const firstVariant = Object.keys(product.variants)[0];
-    //       if (firstVariant) setSelectedVariant(firstVariant);
-    //     }
-    //   }, [product?.variants]);
+    // Default to first variant on load
+    useEffect(() => {
+        if (product?.variants && product.variants.length > 0) {
+            setSelectedVariantId(product.variants[0]._id);
+        }
+    }, [product]);
 
+    const activeVariant = useMemo(() => {
+        return product?.variants?.find(v => v._id === selectedVariantId);
+    }, [product, selectedVariantId]);
 
+    // Dynamic gallery images switching based on active variant
+    const galleryImages = useMemo(() => {
+        if (activeVariant && activeVariant.images && activeVariant.images.length > 0) {
+            return activeVariant.images;
+        }
+        return product?.images || [];
+    }, [product, activeVariant]);
 
-    // A single, unified handler for cart updates
-    const handleUpdateCart = async (action) => {
+    // Handle adding selected variant to cart
+    const handleAddToCart = async () => {
         if (!accessToken) {
             toast.info("Please log in to update your cart.");
             setLoginOpen(true);
             return;
         }
-        if (!product || !selectedVariant || isActionLoading) return;
+
+        if (!selectedVariantId || !activeVariant) {
+            toast.warning("Please select a variant.");
+            return;
+        }
+
+        const quantityToAdd = parseInt(qty);
+        if (isNaN(quantityToAdd) || quantityToAdd <= 0) {
+            toast.warning("Please enter a valid quantity.");
+            return;
+        }
 
         setIsActionLoading(true);
         try {
-            const response = await (action === "add"
-                ? addCartById
-                : removeFromCartById)(
-                    {
-                        productId: product._id,
-                        cartId: user.cart._id,
-                        variantName: selectedVariant,
-                    },
-                    accessToken
-                );
+            const response = await addCartById({
+                items: [{
+                    productId: product._id,
+                    variantId: selectedVariantId,
+                    quantity: quantityToAdd
+                }]
+            }, accessToken);
+
             if (response?.user) {
                 setUser(response.user);
-                // toast.success("Cart updated!");
+                toast.success(`Successfully added ${quantityToAdd} units of "${activeVariant.name}" to cart.`);
+                setQty(60); // Reset quantity spinner
             } else {
-                toast.error(response.error || "Failed to update cart.");
+                toast.error(response?.error || "Failed to update cart.");
             }
         } catch (error) {
+            console.error("Add to cart error:", error);
             toast.error("An error occurred. Please try again.");
         } finally {
             setIsActionLoading(false);
         }
     };
 
-    const { cartItem, variantStock, currentQty, displayPrice } = useMemo(() => {
-        if (!product) return {};
-        const stock = product.variants?.[selectedVariant] || 0;
+    // Handle removing a variant completely from the cart
+    const handleRemoveFromCart = async (variantId, variantName, currentCartQty) => {
+        if (!accessToken) return;
+
+        setIsActionLoading(true);
+        try {
+            const response = await removeFromCartById({
+                items: [{
+                    productId: product._id,
+                    variantId: variantId,
+                    quantity: currentCartQty
+                }]
+            }, accessToken);
+
+            if (response?.user) {
+                setUser(response.user);
+                toast.success(`Removed "${variantName}" from cart.`);
+            } else {
+                toast.error(response?.error || "Failed to update cart.");
+            }
+        } catch (error) {
+            console.error("Remove from cart error:", error);
+            toast.error("An error occurred. Please try again.");
+        } finally {
+            setIsActionLoading(false);
+        }
+    };
+
+    const getCartQty = (variantName) => {
         const item = user?.cart?.items?.find(
-            (i) =>
-                i.productId?._id === product._id && i.variantName === selectedVariant
+            (i) => i.productId?._id === product._id && i.variantName === variantName
         );
+        return item?.quantity || 0;
+    };
 
-        // Get last selling price
-        const price = product.sellingPrice?.[product.sellingPrice?.length - 1]?.price || 0;
+    // Calculate total quantity of this product currently in the cart
+    const totalCartQty = useMemo(() => {
+        if (!product || !user?.cart?.items) return 0;
+        return product.variants?.reduce((sum, v) => sum + getCartQty(v.name), 0) || 0;
+    }, [product, user?.cart?.items]);
 
-        return {
-            cartItem: item,
-            variantStock: stock,
-            currentQty: item?.quantity || 0,
-            displayPrice: price,
-        };
-    }, [product, selectedVariant, user?.cart?.items]);
+    // Calculate which price slab is currently active based on totalCartQty
+    const activeSlabIndex = useMemo(() => {
+        if (!product?.sellingPrice?.slabs) return 0;
+        const slabs = product.sellingPrice.slabs;
+        let activeIdx = 0;
+        // Slabs are usually [60, 300, 1000]
+        for (let i = slabs.length - 1; i >= 0; i--) {
+            if (totalCartQty >= slabs[i].quantity) {
+                activeIdx = i;
+                break;
+            }
+        }
+        return activeIdx;
+    }, [product, totalCartQty]);
+
+    // Active slab unit price
+    const currentUnitPrice = useMemo(() => {
+        if (!product) return 0;
+        const slabs = product.sellingPrice?.slabs;
+        if (slabs && slabs.length > 0) {
+            return slabs[activeSlabIndex].price;
+        }
+        return product.basePrice || 0;
+    }, [product, activeSlabIndex]);
+
+    // Total subtotal of this product in cart
+    const productSubtotal = useMemo(() => {
+        return totalCartQty * currentUnitPrice;
+    }, [totalCartQty, currentUnitPrice]);
 
     // Calculate discount percentage if regular price exists
     const discountPercentage = useMemo(() => {
-        if (product?.regularPrice && product.regularPrice > displayPrice) {
-            return Math.round(((product.regularPrice - displayPrice) / product.regularPrice) * 100);
+        if (product?.regularPrice && product.regularPrice > currentUnitPrice) {
+            return Math.round(((product.regularPrice - currentUnitPrice) / product.regularPrice) * 100);
         }
         return 0;
-    }, [product, displayPrice]);
+    }, [product, currentUnitPrice]);
 
     if (!product) {
         return (
@@ -129,20 +202,19 @@ export default function ProductClient({ product }) {
                     }
                 }
             },
-            { threshold: 0.3 } // Trigger when 30% of section visible
+            { threshold: 0.3 }
         );
 
         observer.observe(relatedRef.current);
         return () => observer.disconnect();
     }, [product?.slug, hasFetched]);
 
-    const checkStock = () => {
-        if (!selectedVariant) {
-            return product?.totalStock > 0
-        } else {
-            return variantStock > 0
-        }
-    }
+    const addedCartItems = useMemo(() => {
+        if (!product || !user?.cart?.items) return [];
+        return user.cart.items.filter(
+            item => item.productId?._id === product._id
+        );
+    }, [product, user?.cart?.items]);
 
     return (
         <div>
@@ -151,7 +223,7 @@ export default function ProductClient({ product }) {
                     {/* Image Gallery Section */}
                     <div className="sm:sticky sm:top-22 sm:h-screen w-full sm:w-[40%]">
                         <ImageGallery
-                            images={product.images || []}
+                            images={galleryImages}
                             fullName={product.fullName}
                             currentImage={currentImage}
                             setCurrentImage={setCurrentImage}
@@ -181,71 +253,184 @@ export default function ProductClient({ product }) {
                             </div>
                         </div>
 
-                        {/* Price Section */}
-                        <div className="bg-gray-50 rounded-lg p-4">
-                            <div className="flex flex-wrap items-center gap-4">
-                                <div>
-                                    <span className="text-3xl font-bold text-gray-900">
-                                        ₹{displayPrice.toLocaleString()}
-                                    </span>
+                        {/* Dynamic B2B Price Slabs Section */}
+                        {product.sellingPrice?.slabs && product.sellingPrice.slabs.length > 0 ? (
+                            <div className="bg-slate-50 border border-slate-100 rounded-xl p-5 mb-1 shadow-sm">
+                                <div className="grid grid-cols-3 gap-6 text-center divide-x divide-slate-200">
+                                    {product.sellingPrice.slabs.map((slab, index) => {
+                                        const minQty = slab.quantity;
+                                        const nextSlab = product.sellingPrice.slabs[index + 1];
+                                        const maxQty = nextSlab ? nextSlab.quantity - 1 : 4000;
+                                        const rangeLabel = nextSlab ? `${minQty}-${maxQty} units` : `≥${minQty} units`;
+                                        const isActive = activeSlabIndex === index;
 
-                                    {product.regularPrice && product.regularPrice > displayPrice && (
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <span className="text-lg line-through text-gray-500">
-                                                ₹{product.regularPrice.toLocaleString()}
-                                            </span>
-                                            <span className="bg-red-100 text-red-700 px-2 py-1 rounded-md text-sm font-medium">
-                                                {discountPercentage}% OFF
-                                            </span>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="ml-auto">
-                                    {checkStock() ? (
-                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                                            <span className="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
-                                            In Stock
-                                        </span>
-                                    ) : (
-                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-                                            Out of Stock
-                                        </span>
-                                    )}
+                                        return (
+                                            <div key={index} className="flex flex-col items-center justify-center px-1">
+                                                <span className={`text-2xl md:text-3xl font-extrabold ${isActive ? "text-slate-900 scale-105" : "text-slate-400"} transition-all duration-200`}>
+                                                    ₹{slab.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                </span>
+                                                <span className={`text-xs ${isActive ? "text-slate-800 font-bold" : "text-slate-400 font-medium"} mt-1.5 capitalize tracking-wide`}>
+                                                    {rangeLabel}
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="bg-gray-50 rounded-lg p-4">
+                                <div className="flex flex-wrap items-center gap-4">
+                                    <div>
+                                        <span className="text-3xl font-bold text-gray-900">
+                                            ₹{currentUnitPrice.toLocaleString()}
+                                        </span>
+
+                                        {product.regularPrice && product.regularPrice > currentUnitPrice && (
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <span className="text-lg line-through text-gray-500">
+                                                    ₹{product.regularPrice.toLocaleString()}
+                                                </span>
+                                                <span className="bg-red-100 text-red-700 px-2 py-1 rounded-md text-sm font-medium">
+                                                    {discountPercentage}% OFF
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         <Separator />
 
-                        {/* Variant Selector */}
-                        <VariantSelector
-                            variants={product.variants || {}}
-                            selectedVariant={selectedVariant}
-                            setSelectedVariant={setSelectedVariant}
-                        />
+                        {/* Interactive Variant Selectors & Quick Add to Cart */}
+                        <div className="space-y-4 pt-2">
+                            {/* Variant Select by Name Chips */}
+                            <div>
+                                <h3 className="text-sm font-bold text-slate-700 mb-2">Variant Options</h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {product.variants?.map((v) => {
+                                        const isSelected = selectedVariantId === v._id;
+                                        const cartQty = getCartQty(v.name);
 
-                        {/* Cart Actions */}
-                        <CartActions
-                            loading={isActionLoading}
-                            currentQty={currentQty}
-                            variantStock={variantStock}
-                            onUpdateCart={handleUpdateCart}
-                        />
+                                        return (
+                                            <button
+                                                key={v._id}
+                                                type="button"
+                                                onClick={() => {
+                                                    setSelectedVariantId(v._id);
+                                                    setCurrentImage(0); // Reset image index
+                                                }}
+                                                className={`relative px-4 py-2 rounded-md border text-sm font-medium transition duration-200 flex items-center gap-2 ${isSelected
+                                                        ? "border-slate-900 bg-slate-900 text-white shadow-sm"
+                                                        : "border-slate-200 bg-white text-slate-700 hover:border-slate-400"
+                                                    }`}
+                                            >
+                                                <span className="capitalize">{v.name}</span>
+                                                {cartQty > 0 && (
+                                                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-black ${isSelected ? "bg-white text-slate-900" : "bg-slate-100 text-slate-700"
+                                                        }`}>
+                                                        x{cartQty}
+                                                    </span>
+                                                )}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
 
-                        <div className="flex gap-3 pt-2">
-                            <Button
-                                className="flex-1 h-full"
-                                onClick={() => handleUpdateCart("add")}
-                                disabled={currentQty >= variantStock || isActionLoading}
-                            >
-                                {isActionLoading ? <Loader2 className="w-4 h-4 animate-spin" />
-                                    : <div>
-                                        Add to Cart {!selectedVariant && "(Please select a variant!)"}
+                            {/* Active Variant Quantity Spinner and Add Button */}
+                            {activeVariant && (
+                                <div className="border border-slate-100 bg-slate-50/50 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-2">
+                                    <div className="text-left">
+                                        <p className="text-sm font-bold text-slate-800 capitalize">
+                                            Select Quantity for "{activeVariant.name}"
+                                        </p>
+                                        <p className="text-xs text-slate-500 mt-0.5">
+                                            MOQ: {product.moq || 60} units | Max order: 4,000 units
+                                        </p>
                                     </div>
-                                }
-                                {/* Add to Cart */}
-                            </Button>
+
+                                    <div className="flex items-center gap-3 self-start sm:self-center">
+                                        <div className="flex items-center gap-1.5">
+                                            <button
+                                                type="button"
+                                                className="w-9 h-9 rounded-md border border-slate-300 bg-white flex items-center justify-center font-bold text-slate-600 hover:bg-slate-100 transition active:scale-95 disabled:opacity-40"
+                                                onClick={() => setQty(q => Math.max(1, q - 1))}
+                                                disabled={qty <= 1}
+                                            >
+                                                –
+                                            </button>
+                                            <input
+                                                type="text"
+                                                value={qty}
+                                                onChange={(e) => {
+                                                    let num = parseInt(e.target.value);
+                                                    if (isNaN(num) || num < 1) num = 1;
+                                                    if (num > 4000) num = 4000;
+                                                    setQty(num);
+                                                }}
+                                                className="w-16 h-9 text-center border border-slate-300 bg-white rounded-md font-bold text-slate-800 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition"
+                                            />
+                                            <button
+                                                type="button"
+                                                className="w-9 h-9 rounded-md border border-slate-300 bg-white flex items-center justify-center font-bold text-slate-600 hover:bg-slate-100 transition active:scale-95 disabled:opacity-40"
+                                                onClick={() => setQty(q => Math.min(4000, q + 1))}
+                                                disabled={qty >= 4000}
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+
+                                        <Button
+                                            className="bg-[#ED1C24] hover:bg-[#D1171D] text-white font-semibold py-2 h-9 px-5 rounded-md shadow transition duration-200"
+                                            onClick={handleAddToCart}
+                                            disabled={isActionLoading}
+                                        >
+                                            {isActionLoading ? (
+                                                <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+                                            ) : (
+                                                "Add to Cart"
+                                            )}
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Added Items in Cart List */}
+                            {addedCartItems.length > 0 && (
+                                <div className="border border-slate-200 rounded-xl p-4 bg-white shadow-sm mt-3">
+                                    <div className="flex items-center justify-between border-b pb-2 mb-3">
+                                        <h4 className="text-sm font-extrabold text-slate-800">Added Items in Cart</h4>
+                                        <span className="text-xs bg-red-50 text-[#ED1C24] font-bold px-2 py-0.5 rounded">
+                                            Product Total: ₹{productSubtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </span>
+                                    </div>
+                                    <div className="divide-y divide-slate-100">
+                                        {addedCartItems.map((item) => (
+                                            <div key={item._id} className="flex items-center justify-between py-2.5 first:pt-0 last:pb-0">
+                                                <div className="text-left">
+                                                    <span className="font-semibold text-slate-900 capitalize text-sm">{item.variantName}</span>
+                                                    <span className="text-xs text-slate-500 block">{item.quantity} units x ₹{item.price.toFixed(2)}</span>
+                                                </div>
+                                                <div className="flex items-center gap-4">
+                                                    <span className="font-bold text-slate-900 text-sm">
+                                                        ₹{(item.quantity * item.price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleRemoveFromCart(item.variantId, item.variantName, item.quantity)}
+                                                        className="text-slate-400 hover:text-[#ED1C24] transition duration-150 p-1"
+                                                        title="Remove variant"
+                                                        disabled={isActionLoading}
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Key Features */}
@@ -307,8 +492,8 @@ export default function ProductClient({ product }) {
                                                     <div className="font-medium">{product.category?.name || "—"}</div>
                                                 </div>
                                                 <div>
-                                                    <div className="text-sm text-gray-500">Variant</div>
-                                                    <div className="font-medium capitalize">{selectedVariant || "—"}</div>
+                                                    <div className="text-sm text-gray-500">Variants</div>
+                                                    <div className="font-medium capitalize">{product.variants?.map(v => v.name).join(", ") || "—"}</div>
                                                 </div>
                                             </div>
                                         </CardContent>

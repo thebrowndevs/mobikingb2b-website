@@ -55,38 +55,61 @@ export default function MyCart({ isOpen, onClose }) {
     }
   }, [isOpen])
 
+  const [groupedCart, setGroupedCart] = useState([]);
+
   useEffect(() => {
     const rawItems = user?.cart?.items || [];
-    const processedItems = rawItems.map((item) => {
-      const product = item.productId || {};
-      const uniqueId = `${product._id}-${item.variantName}`;
-      return {
-        uniqueId,
-        productId: product._id,
-        variantName: item.variantName,
-        name: product.fullName || "Unnamed Product",
-        image: product.images?.[0] || "/placeholder.png",
-        price: product.sellingPrice?.[product.sellingPrice?.length - 1]?.price || 0,
-        quantity: item.quantity || 1,
-        stock: product.variants?.[item.variantName] || 0,
-      };
-    });
+    const groups = {};
 
-    setProcessedCartItems(processedItems);
-    const totalAmount = processedItems.reduce(
+    for (const item of rawItems) {
+      const product = item.productId || {};
+      const pId = product._id;
+      if (!pId) continue;
+
+      if (!groups[pId]) {
+        groups[pId] = {
+          productId: pId,
+          name: product.fullName || "Unnamed Product",
+          image: product.images?.[0] || "/placeholder.png",
+          slug: product.slug,
+          appliedSlab: item.appliedSlab?.quantity || 60,
+          totalQty: 0,
+          totalValue: 0,
+          items: []
+        };
+      }
+
+      groups[pId].totalQty += item.quantity;
+      groups[pId].totalValue += item.quantity * item.price;
+      groups[pId].items.push({
+        uniqueId: `${pId}-${item.variantName}`,
+        variantId: item.variantId,
+        variantName: item.variantName,
+        quantity: item.quantity,
+        price: item.price,
+        stock: 4000
+      });
+    }
+
+    const groupedList = Object.values(groups);
+    setGroupedCart(groupedList);
+
+    const totalAmount = rawItems.reduce(
       (acc, item) => acc + item.price * item.quantity,
       0
     );
     setTotal(totalAmount);
   }, [user]);
 
-  const handleUpdateCart = async (action, item) => {
+  const handleUpdateCart = async (action, pId, vId, qtyToChange, uniqueId) => {
     if (loadingItemId || !accessToken) return;
-    setLoadingItemId(item.uniqueId);
+    setLoadingItemId(uniqueId);
     const body = {
-      productId: item.productId,
-      cartId: user?.cart?._id,
-      variantName: item.variantName,
+      items: [{
+        productId: pId,
+        variantId: vId,
+        quantity: qtyToChange
+      }]
     };
     try {
       const apiCall = action === "add" ? addCartById : removeFromCartById;
@@ -94,8 +117,6 @@ export default function MyCart({ isOpen, onClose }) {
       if (response?.user) {
         setUser(response.user);
         localStorage.setItem("user", JSON.stringify(response.user));
-        // Using a more subtle toast for quick actions
-        // toast.message(`Cart updated.`);
       }
     } catch (err) {
       console.error("Cart update error:", err);
@@ -105,7 +126,7 @@ export default function MyCart({ isOpen, onClose }) {
     }
   };
 
-  const hasItems = processedCartItems.length > 0;
+  const hasItems = groupedCart.length > 0;
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -116,7 +137,7 @@ export default function MyCart({ isOpen, onClose }) {
         <SheetHeader className="p-6 border-b border-gray-200">
           <SheetTitle className="flex items-center gap-2">
             <ShoppingCart className="w-5 h-5" />
-            My Cart ({processedCartItems.length})
+            My Cart ({user?.cart?.items?.length || 0})
           </SheetTitle>
         </SheetHeader>
 
@@ -126,62 +147,90 @@ export default function MyCart({ isOpen, onClose }) {
 
           : hasItems ? (
             <>
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                {processedCartItems.map((item) => {
-                  const isLoading = loadingItemId === item.uniqueId;
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {groupedCart.map((group) => {
                   return (
-                    <div key={item.uniqueId} className="flex gap-4">
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-24 h-24 object-contain rounded-md border bg-gray-50"
-                      />
-                      <div className="flex-1 flex flex-col justify-between">
-                        <div>
-                          <h3 className="font-medium text-sm line-clamp-2">
-                            {item.name}
+                    <div key={group.productId} className="border border-slate-100 bg-slate-50/30 rounded-xl p-4 space-y-3">
+                      {/* Product Group Header */}
+                      <div className="flex gap-3">
+                        <img
+                          src={group.image}
+                          alt={group.name}
+                          className="w-16 h-16 object-contain rounded-md border bg-white flex-shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-slate-800 text-sm line-clamp-2 text-left leading-snug">
+                            {group.name}
                           </h3>
-                          <p className="text-xs text-gray-500 capitalize">
-                            {item.variantName}
-                          </p>
-                          <p className="text-sm font-semibold text-gray-800 mt-1">
-                            ₹{item.price.toLocaleString()}
-                          </p>
-                        </div>
-                        <div className="flex items-center justify-between mt-2">
-                          <div className="flex items-center border rounded-md">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              disabled={isLoading}
-                              onClick={() => handleUpdateCart("remove", item)}
-                            >
-                              −
-                            </Button>
-                            <div className="w-10 flex justify-center items-center">
-                              {isLoading ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                              ) : (
-                                <span className="font-medium text-sm">
-                                  {item.quantity}
-                                </span>
-                              )}
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              disabled={isLoading || item.quantity >= item.stock}
-                              onClick={() => handleUpdateCart("add", item)}
-                            >
-                              +
-                            </Button>
+                          <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                            <span className="text-[10px] bg-red-50 text-[#ED1C24] px-2 py-0.5 rounded-full font-bold">
+                              Slab: {group.appliedSlab}+ units
+                            </span>
+                            <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-semibold">
+                              Total: {group.totalQty} units
+                            </span>
                           </div>
-                          <p className="font-medium text-right text-base">
-                            ₹{(item.price * item.quantity).toLocaleString()}
-                          </p>
                         </div>
+                        <div className="text-right">
+                          <span className="font-black text-slate-900 text-sm">
+                            ₹{group.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Variant Sub-items List */}
+                      <div className="border-t border-slate-100 pt-2.5 space-y-2">
+                        {group.items.map((item) => {
+                          const isLoading = loadingItemId === item.uniqueId;
+                          return (
+                            <div key={item.uniqueId} className="flex items-center justify-between pl-4 py-1">
+                              <div className="text-left">
+                                <span className="font-semibold text-slate-700 capitalize text-xs">{item.variantName}</span>
+                                <span className="text-[10px] text-slate-500 block">₹{item.price.toFixed(2)} / unit</span>
+                              </div>
+
+                              <div className="flex items-center gap-3">
+                                <div className="flex items-center border rounded-md bg-white">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-xs"
+                                    disabled={isLoading}
+                                    onClick={() => handleUpdateCart("remove", group.productId, item.variantId, 1, item.uniqueId)}
+                                  >
+                                    −
+                                  </Button>
+                                  <div className="w-8 flex justify-center items-center">
+                                    {isLoading ? (
+                                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    ) : (
+                                      <span className="font-bold text-slate-800 text-xs">
+                                        {item.quantity}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-xs"
+                                    disabled={isLoading || item.quantity >= item.stock}
+                                    onClick={() => handleUpdateCart("add", group.productId, item.variantId, 1, item.uniqueId)}
+                                  >
+                                    +
+                                  </Button>
+                                </div>
+                                <button
+                                  type="button"
+                                  disabled={isLoading}
+                                  onClick={() => handleUpdateCart("remove", group.productId, item.variantId, item.quantity, item.uniqueId)}
+                                  className="text-slate-400 hover:text-[#ED1C24] transition text-xs font-semibold p-1"
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   );
@@ -195,7 +244,7 @@ export default function MyCart({ isOpen, onClose }) {
                 {onboardingStep !== null && onboardingStep < 2 ? (
                   <div className="space-y-3">
                     <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 text-xs font-semibold text-amber-700 leading-normal">
-                      Complete your B2B profile & primary warehouse address to place orders.
+                      Complete your B2B profile & primary warehouse address to proceed.
                     </div>
                     <Button asChild size="lg" className="w-full">
                       <Link href="/onboarding" onClick={onClose}>

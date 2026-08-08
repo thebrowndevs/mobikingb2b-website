@@ -194,85 +194,27 @@ export default function ProductCard1({ product, badge, discount }) {
               <span className="ml-1">({reviewCount?.toLocaleString() || 0})</span>
             </span>
           </div>
-        </Link>
-
-        {/* Price + Add/Counter */}
-        <div className="mt-2 flex justify-between items-center">
-          <div className="flex flex-col mb-1">
-            <p className="text-sm font-semibold text-gray-900">
-              ₹{displayPrice.toLocaleString()}
-            </p>
-            {originalPrice && originalPrice != displayPrice && (
-              <p className="text-xs text-gray-400 line-through">
-                ₹{originalPrice.toLocaleString()}
-              </p>
-            )}
-          </div>
-
-          {/* Add/Remove Button */}
-          <div className="h-10 transition-all duration-300">
-            {defaultVariantName ? (
-              quantity === 0 ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 w-full text-xs font-semibold rounded-sm border-green-600 text-green-600 hover:bg-green-50 transition"
-                  onClick={(e) => handleUpdateCart(e, "add")}
-                  disabled={isLoading || isWishlistLoading || product?.totalStock === 0}
-                >
-                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "ADD"}
-                </Button>
+        </Link>        {/* Price + MOQ */}
+        <div className="mt-2 pt-2 border-t border-slate-100 flex flex-col items-start gap-1">
+          <p className="text-sm font-extrabold text-[#ED1C24]">
+            {product.minPrice !== undefined && product.maxPrice !== undefined ? (
+              product.minPrice === product.maxPrice ? (
+                `₹${product.minPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
               ) : (
-                <div className=" w-full rounded-sm bg-white border border-green-600 transition">
-                  <div className="w-full px-2 flex items-center justify-between ">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="w-6 h-6 p-0 text-lg text-green-700 hover:bg-green-100"
-                      onClick={(e) => handleUpdateCart(e, "remove")}
-                      disabled={isLoading || isWishlistLoading}
-                    >
-                      {"–"}
-                    </Button>
-                    <span className="text-sm text-green-700 font-medium">
-                      {isLoading ? (
-                        <Loader2 className="w-4 h-4 animate-spin mx-auto" />
-                      ) : (
-                        quantity
-                      )}
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="w-6 h-6 p-0 text-lg text-green-700 hover:bg-green-100"
-                      onClick={(e) => handleUpdateCart(e, "add")}
-                      disabled={isLoading || isWishlistLoading || quantity >= defaultVariantStock}
-                    >
-                      {"+"}
-                    </Button>
-                  </div>
-
-                  {/* Variant Name */}
-                  {
-                    ((variantEntries?.filter(v => v[1] > 0).length - 1) > 0) && (
-                      <p className="w-full text-[11px] text-green-700 font-bold text-center pb-1 capitalize truncate">
-                        {`${(variantEntries?.filter(v => v[1] > 0).length - 1)} more`}
-                      </p>
-                    )}
-                </div>
+                `₹${product.minPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} - ${product.maxPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
               )
             ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 w-full text-xs text-gray-400"
-                disabled
-              >
-                Unavailable
-              </Button>
+              `₹${displayPrice.toLocaleString()}`
+            )}
+          </p>
+          <div className="flex items-center justify-between w-full text-[11px] text-gray-500 font-semibold">
+            <span>MOQ: {product.moq || 60} units</span>
+            {variantEntries.length > 0 && (
+              <span className="text-[10px] bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded font-bold capitalize">
+                {variantEntries.length} {variantEntries.length === 1 ? "variant" : "variants"}
+              </span>
             )}
           </div>
-
         </div>
       </div>
     </div>

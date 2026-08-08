@@ -89,9 +89,12 @@ export default function CheckoutPageV1() {
 
   useEffect(() => {
     if (user) {
-      setCustomerName(user?.fullName || "");
+      setCustomerName(user?.business?.businessName || user?.fullName || user?.name || "");
       setCustomerEmail(user?.email || "");
       setCustomerPhone(user?.phoneNo || "");
+      if (user?.business?.gstNumber) {
+        setCustomerGST(user.business.gstNumber);
+      }
     }
   }, [user]);
 
@@ -219,12 +222,12 @@ export default function CheckoutPageV1() {
         productId: item.productId?._id,
         name: item.productId?.fullName || "Unnamed Product",
         image: item.productId?.images?.[0] || "/placeholder.png",
-        price: item.productId?.sellingPrice?.[item.productId?.sellingPrice?.length - 1]?.price || 0,
+        price: item.price || 0,
         saved: (
           item?.productId?.regularPrice &&
-          item?.productId?.regularPrice > (item.productId?.sellingPrice?.[item.productId?.sellingPrice?.length - 1]?.price || 0)
+          item?.productId?.regularPrice > (item.price || 0)
         ) ? (
-          +item?.productId?.regularPrice - +(item.productId?.sellingPrice?.[item.productId?.sellingPrice?.length - 1]?.price || 0)
+          +item?.productId?.regularPrice - +(item.price || 0)
         ) : 0,
         quantity: item.quantity,
         variantName: item.variantName,

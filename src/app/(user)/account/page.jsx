@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, Suspense } from "react";
-import { Loader2, User, ShoppingCart, MapPin, ShoppingBag, Heart, Building2, LogOut, ShieldCheck, ShieldAlert } from "lucide-react";
+import { Loader2, User, ShoppingCart, MapPin, ShoppingBag, Heart, Building2, LogOut, ShieldCheck, ShieldAlert, FileText } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,6 +8,7 @@ import { Breadcrumb } from "@/components/ui/breadcrumb";
 import Profile from "./_components/Profile";
 import Address from "./_components/Address";
 import Orders from "./_components/Orders";
+import Quotations from "./_components/Quotations";
 import Wishlist from "./_components/Wishlist";
 import Cart from "./_components/Cart";
 import BusinessProfile from "./_components/BusinessProfile";
@@ -23,6 +24,7 @@ function AccountContent() {
     { name: "Business Profile", value: "business", Component: <BusinessProfile />, icon: Building2 },
     { name: "My Cart", value: "cart", Component: <Cart />, icon: ShoppingCart },
     { name: "My Warehouses", value: "address", Component: <Address />, icon: MapPin },
+    { name: "Order Requests", value: "quotations", Component: <Quotations />, icon: FileText },
     { name: "My Orders", value: "orders", Component: <Orders />, icon: ShoppingBag },
     { name: "My Wishlist", value: "wishlist", Component: <Wishlist />, icon: Heart },
   ];

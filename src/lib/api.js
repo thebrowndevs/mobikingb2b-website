@@ -27,6 +27,7 @@ export const homeEndPoints = {
 
   GET_MY_CART_API: `${baseUrl}/users/cart`,
   ADD_TO_CART_API: `${baseUrl}/cart/add`,
+  ADD_TO_CART_BULK_API: `${baseUrl}/cart/add-bulk`,
   REMOVE_FROM_CART_API: `${baseUrl}/cart/remove`,
   REFRESH_TOKEN_API: `${baseUrl}/users/refresh-token`,
   FORGOT_PASSWORD_LINK_API: `${baseUrl}/users/forgot-password-link`,
@@ -87,4 +88,12 @@ export const onboardingEndpoints = {
   ONBOARDING_GST_VERIFY: `${baseUrl}/onboarding/gst/verify`,
   ONBOARDING_SAVE_BUSINESS: `${baseUrl}/onboarding/business`,
   ONBOARDING_UPDATE_GST: `${baseUrl}/onboarding/gst/update`,
+}
+
+export const quotationEndpoints = {
+  RAISE_QUOTATION_API: `${baseUrl}/quotations/new`,
+  GET_MY_QUOTATIONS_API: `${baseUrl}/quotations/my`,
+  GET_ALL_QUOTATIONS_API: `${baseUrl}/quotations/all`,
+  UPDATE_QUOTATION_STATUS_API: `${baseUrl}/quotations/status`,
+  BOOK_QUOTATION_API: `${baseUrl}/quotations/book`
 }

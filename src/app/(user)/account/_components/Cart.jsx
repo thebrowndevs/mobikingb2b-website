@@ -15,53 +15,63 @@ export default function Cart() {
   const { user, accessToken, setUser } = useAuth();
 
   const [loadingItemId, setLoadingItemId] = useState(null);
-  const [processedCartItems, setProcessedCartItems] = useState([]);
+  const [groupedCart, setGroupedCart] = useState([]);
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
     const rawItems = user?.cart?.items || [];
+    const groups = {};
 
-    const items = rawItems.map((item) => {
+    for (const item of rawItems) {
       const product = item.productId || {};
-      const productId = product._id;
-      const variantName = item.variantName;
-      const uniqueId = `${productId}-${variantName}`;
-      // const price = product.sellingPrice?.[0]?.price || 0;
-      const price = item?.price;
-      const stock = product.variants?.[variantName] || 0;
+      const pId = product._id;
+      if (!pId) continue;
 
-      // Extract the slug from the populated product data
-      const slug = product.slug;
+      if (!groups[pId]) {
+        groups[pId] = {
+          productId: pId,
+          name: product.fullName || "Unnamed Product",
+          image: product.images?.[0] || "/placeholder.png",
+          slug: product.slug,
+          appliedSlab: item.appliedSlab?.quantity || 60,
+          totalQty: 0,
+          totalValue: 0,
+          items: []
+        };
+      }
 
-      return {
-        uniqueId,
-        productId,
-        variantName,
-        name: product.fullName || "Unnamed Product",
-        image: product.images?.[0] || "/placeholder.png",
-        price,
-        stock,
-        quantity: item.quantity || 1,
-        slug: slug, // Add the slug to the processed item object
-      };
-    });
+      groups[pId].totalQty += item.quantity;
+      groups[pId].totalValue += item.quantity * item.price;
+      groups[pId].items.push({
+        uniqueId: `${pId}-${item.variantName}`,
+        variantId: item.variantId,
+        variantName: item.variantName,
+        quantity: item.quantity,
+        price: item.price,
+        stock: 4000
+      });
+    }
 
-    setProcessedCartItems(items);
-    const newTotal = items.reduce(
+    const groupedList = Object.values(groups);
+    setGroupedCart(groupedList);
+
+    const newTotal = rawItems.reduce(
       (acc, item) => acc + item.price * item.quantity,
       0
     );
     setTotal(newTotal);
   }, [user]);
 
-  const handleUpdateCart = async (action, item) => {
+  const handleUpdateCart = async (action, pId, vId, qtyToChange, uniqueId) => {
     if (loadingItemId || !accessToken) return;
 
-    setLoadingItemId(item.uniqueId);
+    setLoadingItemId(uniqueId);
     const body = {
-      productId: item.productId,
-      cartId: user?.cart?._id,
-      variantName: item.variantName,
+      items: [{
+        productId: pId,
+        variantId: vId,
+        quantity: qtyToChange
+      }]
     };
 
     try {
@@ -71,9 +81,6 @@ export default function Cart() {
       if (response?.user) {
         setUser(response.user);
         localStorage.setItem("user", JSON.stringify(response.user));
-        // toast.success(
-        //   `Item ${action === "add" ? "added to" : "removed from"} cart.`
-        // );
       }
     } catch (err) {
       console.error("Cart update error:", err);
@@ -83,74 +90,101 @@ export default function Cart() {
     }
   };
 
-  const hasItems = processedCartItems.length > 0;
+  const hasItems = groupedCart.length > 0;
 
   return (
     <div className="w-full mx-auto sm:p-4">
       {hasItems ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <ul className="space-y-6 md:col-span-2">
-            {processedCartItems.map((item) => {
-              const isLoading = loadingItemId === item.uniqueId;
+          <div className="md:col-span-2 space-y-6">
+            {groupedCart.map((group) => {
               return (
-                <li key={item.uniqueId} className="flex gap-4 border-b pb-6">
-                  {/* Correctly use the slug from the processed item */}
-                  <Link href={item.slug ? `/ps/${item.slug}` : "#"}>
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-24 h-24 sm:w-32 sm:h-32 object-contain rounded-md border bg-gray-50"
-                    />
-                  </Link>
-                  <div className="flex-1 flex flex-col justify-between">
-                    <div>
-                      <h2 className="font-semibold text-base sm:text-lg">
-                        {item.name}
+                <div key={group.productId} className="border rounded-xl p-5 bg-white shadow-sm space-y-4 text-left">
+                  {/* Product Card Info */}
+                  <div className="flex gap-4">
+                    <Link href={group.slug ? `/ps/${group.slug}` : "#"}>
+                      <img
+                        src={group.image}
+                        alt={group.name}
+                        className="w-20 h-20 sm:w-24 sm:h-24 object-contain rounded-md border bg-gray-50 flex-shrink-0"
+                      />
+                    </Link>
+                    <div className="flex-1 min-w-0">
+                      <h2 className="font-bold text-slate-800 text-base sm:text-lg line-clamp-2 leading-snug">
+                        {group.name}
                       </h2>
-                      <p className="text-sm text-gray-500 capitalize">
-                        {item.variantName}
-                      </p>
-                      <p className="text-sm text-gray-600 mt-2">
-                        Price: ₹{item.price.toLocaleString()}
-                      </p>
-                    </div>
-                    <div className="flex items-center justify-between mt-2">
-                      <div className="flex items-center border rounded-lg">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-9 w-9"
-                          disabled={isLoading}
-                          onClick={() => handleUpdateCart("remove", item)}
-                        >
-                          −
-                        </Button>
-                        <div className="w-12 text-center font-medium">
-                          {isLoading ? (
-                            <Loader2 className="w-5 h-5 animate-spin mx-auto" />
-                          ) : (
-                            item.quantity
-                          )}
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-9 w-9"
-                          disabled={isLoading || item.quantity >= item.stock}
-                          onClick={() => handleUpdateCart("add", item)}
-                        >
-                          +
-                        </Button>
+                      <div className="flex flex-wrap items-center gap-2 mt-2">
+                        <span className="text-xs bg-red-50 text-[#ED1C24] px-2.5 py-0.5 rounded-full font-bold">
+                          Slab: {group.appliedSlab}+ units
+                        </span>
+                        <span className="text-xs bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-full font-semibold">
+                          Total Qty: {group.totalQty} units
+                        </span>
                       </div>
-                      <p className="text-lg font-bold text-right">
-                        ₹{(item.price * item.quantity).toLocaleString()}
+                    </div>
+                    <div className="text-right pl-2">
+                      <p className="text-lg font-black text-slate-900">
+                        ₹{group.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
                     </div>
                   </div>
-                </li>
+
+                  {/* Sub-items list */}
+                  <div className="border-t border-slate-100 pt-3 space-y-3">
+                    {group.items.map((item) => {
+                      const isLoading = loadingItemId === item.uniqueId;
+                      return (
+                        <div key={item.uniqueId} className="flex items-center justify-between pl-6 py-1">
+                          <div className="text-left">
+                            <span className="font-semibold text-slate-700 capitalize text-sm">{item.variantName}</span>
+                            <span className="text-xs text-slate-500 block">₹{item.price.toFixed(2)} / unit</span>
+                          </div>
+
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center border rounded-lg bg-white">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                disabled={isLoading}
+                                onClick={() => handleUpdateCart("remove", group.productId, item.variantId, 1, item.uniqueId)}
+                              >
+                                −
+                              </Button>
+                              <div className="w-10 text-center font-bold text-slate-800 text-sm">
+                                {isLoading ? (
+                                  <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+                                ) : (
+                                  item.quantity
+                                )}
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                disabled={isLoading || item.quantity >= item.stock}
+                                onClick={() => handleUpdateCart("add", group.productId, item.variantId, 1, item.uniqueId)}
+                              >
+                                +
+                              </Button>
+                            </div>
+                            <button
+                              type="button"
+                              disabled={isLoading}
+                              onClick={() => handleUpdateCart("remove", group.productId, item.variantId, item.quantity, item.uniqueId)}
+                              className="text-slate-400 hover:text-[#ED1C24] transition text-sm font-semibold p-1"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               );
             })}
-          </ul>
+          </div>
 
           <div className="md:col-span-1">
             <div className="border rounded-lg p-6 sticky top-24">
