@@ -1,93 +1,112 @@
 "use client";
 
-import { getCategories } from "@/lib/services/operations/HomeApi";
-import { Loader2 } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
+import { apiConnector } from "@/lib/services/apiConnector";
+import { homeEndPoints } from "@/lib/api";
+
+const { GET_WEBSITE_CATEGORIES } = homeEndPoints;
 
 export default function HomeCategory() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchCategories = async () => {
       try {
-        const data = await getCategories();
-        const active = data?.filter(d => d.active === true)
-
-        setCategories(active);
+        const response = await apiConnector("GET", GET_WEBSITE_CATEGORIES);
+        setCategories(response?.data?.data || []);
       } catch (error) {
-        console.error("Failed to fetch categories:", error);
+        console.error("Failed to fetch homepage categories:", error);
       } finally {
         setLoading(false);
       }
     };
-    fetchData();
+    fetchCategories();
   }, []);
 
-  return (
-    <section className="w-full  pb-4 sm:pb-8 mx-auto">
-      <div className="mx-4">
-        {/* <h2 className="text-center text-2xl font-bold mb-6 text-gray-900">
-          Shop by Category
-        </h2> */}
-
-        {loading ? (
-          <div className="flex justify-center py-12">
-            <Loader2 className="w-10 h-10 animate-spin text-green-600" />
+  if (loading) {
+    return (
+      <section className="w-full pb-4 sm:pb-8 mx-auto">
+        <div className="mx-4">
+          <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-4">
+            {Array.from({ length: 8 }).map((_, idx) => (
+              <div key={idx} className="flex flex-col items-center space-y-3 animate-pulse">
+                {/* Circular image placeholder */}
+                <div className="w-20 h-20 sm:w-28 sm:h-28 lg:w-36 lg:h-36 rounded-full bg-slate-200 dark:bg-slate-800" />
+                {/* Text placeholder */}
+                <div className="h-3 w-12 sm:w-16 bg-slate-200 dark:bg-slate-800 rounded" />
+              </div>
+            ))}
           </div>
-        ) : (
-          <Swiper
-            modules={[Autoplay, Navigation]}
-            slidesPerView={4}          // mobile default
-            loop
-            speed={600}
-            spaceBetween={16}
-            autoplay={{
-              delay: 2000,
-              disableOnInteraction: false,
-              pauseOnMouseEnter: false,
-            }}
-            breakpoints={{
-              768: { slidesPerView: 6 },   // tablet
-              1024: { slidesPerView: 8 },  // desktop
-            }}
-            className="overflow-hidden"
-          >
-            {categories.map((category, idx) => (
+        </div>
+      </section>
+    );
+  }
+
+  if (!categories.length) {
+    return null;
+  }
+
+  return (
+    <section className="w-full pb-4 sm:pb-8 mx-auto">
+      <div className="mx-4">
+        <h2 className="text-center text-xl sm:text-3xl font-semibold text-slate-800 tracking-wider uppercase mb-5">
+          Shop by Category
+        </h2>
+        <Swiper
+          modules={[Autoplay, Navigation]}
+          slidesPerView={4}
+          loop={categories.length > 4}
+          speed={600}
+          spaceBetween={12}
+          autoplay={{
+            delay: 3000,
+            disableOnInteraction: false,
+            pauseOnMouseEnter: true,
+          }}
+          breakpoints={{
+            480: { slidesPerView: 5, spaceBetween: 10 },
+            768: { slidesPerView: 6, spaceBetween: 12 },
+            1024: { slidesPerView: 9, spaceBetween: 8 },
+            1280: { slidesPerView: 9, spaceBetween: 2 },
+          }}
+          className="overflow-hidden py-2"
+        >
+          {categories.map((category, idx) => {
+            const imageSrc = category.photos?.[0] || "/not-found-img.webp";
+            return (
               <SwiperSlide key={idx}>
                 <Link
-                  href={
-                    category.subCategories?.[0]?.slug
-                      ? `/cs/${category.subCategories[0].slug}`
-                      : "/categories"
-                  }
-                  className="group flex-shrink-0 max-[400px]:w-24 w-28 sm:w-32 md:w-36 lg:w-40"
+                  href={`/cs/${category.slug}`}
+                  className="group flex flex-col items-center text-center shrink-0 w-full"
                 >
-                  <div className="relative w-full aspect-square bg-gray-100 rounded-sm sm:my-4 overflow-hidden shadow-sm transform transition group-hover:scale-105">
+                  {/* Premium circular wrapper with shadow and scale effect */}
+                  <div className="relative w-20 h-20 sm:w-28 sm:h-28 lg:w-36 lg:h-36 rounded-full bg-white border border-slate-100 overflow-hidden shadow-sm transform transition duration-350 ease-out group-hover:scale-105 group-hover:shadow-md group-hover:border-indigo-100">
                     <Image
-                      src={category.image || "/not-found-img.webp"}
+                      src={imageSrc}
                       alt={category.name}
                       fill
-                      className="object-cover"
+                      className="object-cover p-1.5 rounded-full"
+                      unoptimized
                     />
                   </div>
-                  <div className="mt-2 text-center">
-                    <span className="block text-sm font-medium text-gray-800 group-hover:text-green-600 transition-colors truncate">
+                  <div className="mt-3">
+                    <span className="block text-xs sm:text-base font-normal text-slate-700 group-hover:text-indigo-650 transition-colors duration-250 truncate max-w-[100px] sm:max-w-[120px]">
                       {category.name}
                     </span>
                   </div>
                 </Link>
               </SwiperSlide>
-            ))}
-          </Swiper>
-        )}
+            );
+          })}
+        </Swiper>
       </div>
     </section>
   );

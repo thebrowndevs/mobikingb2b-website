@@ -4,7 +4,7 @@ import ConditionalLayout from "@/components/layout/ConditionalLayout";
 import { AuthProvider } from "@/context/AuthContext";
 import { Toaster } from "@/components/ui/sonner";
 import React from "react";
-import Script from "next/script";
+// import Script from "next/script";
 
 const proximaNova = localFont({
   src: [
@@ -28,13 +28,13 @@ const proximaNova = localFont({
 });
 
 const SITE_NAME = "Mobiking Wholesale";
-const SITE_URL = "https://mobikingwholesale.com";
+// const SITE_URL = "https://mobikingwholesale.com";
 const DEFAULT_DESCRIPTION =
   "Open-Box Electronics at Unbeatable Prices — Mobiking Wholesale. Shop speakers, cables, chargers, computer accessories, earbuds, headphones, and more at wholesale rates.";
-const DEFAULT_IMAGE = `${SITE_URL}/logo.png`;
+// const DEFAULT_IMAGE = `${SITE_URL}/logo.png`;
 
 export const metadata = {
-  title: "Open-Box Electronics at Unbeatable Prices - Shop Now - Mobiking Wholesale",
+  title: "Mobiking B2B",
   description: DEFAULT_DESCRIPTION,
 };
 
@@ -43,21 +43,21 @@ export default function RootLayout({ children }) {
     <html lang="en" suppressHydrationWarning>
       <head>
         {/* Basic */}
-        <meta charSet="utf-8" />
+        {/* <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
         <meta name="theme-color" content="#ffffff" />
         <meta name="description" content={DEFAULT_DESCRIPTION} />
-        <link rel="canonical" href={SITE_URL} />
+        <link rel="canonical" href={SITE_URL} /> */}
 
         {/* Google Search Console Verification */}
-        <meta name="google-site-verification" content="pEzIEyl719Z2rAHCoOgm0EHipeRQ620wBuf-dyLv-54" />
+        {/* <meta name="google-site-verification" content="pEzIEyl719Z2rAHCoOgm0EHipeRQ620wBuf-dyLv-54" /> */}
 
         {/* SEO robots */}
-        <meta name="robots" content="index, follow" />
-        <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+        {/* <meta name="robots" content="index, follow" />
+        <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" /> */}
 
         {/* Open Graph */}
-        <meta property="og:type" content="website" />
+        {/* <meta property="og:type" content="website" />
         <meta property="og:locale" content="en_IN" />
         <meta property="og:site_name" content={SITE_NAME} />
         <meta property="og:title" content={metadata.title} />
@@ -66,17 +66,17 @@ export default function RootLayout({ children }) {
         <meta property="og:image" content={DEFAULT_IMAGE} />
         <meta property="og:image:alt" content={`${SITE_NAME} - Best wholesale electronics`} />
         <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
+        <meta property="og:image:height" content="630" /> */}
 
         {/* Twitter Card */}
-        <meta name="twitter:card" content="summary_large_image" />
+        {/* <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="@MobikingWholesale" />
         <meta name="twitter:title" content={metadata.title} />
         <meta name="twitter:description" content={DEFAULT_DESCRIPTION} />
-        <meta name="twitter:image" content={DEFAULT_IMAGE} />
+        <meta name="twitter:image" content={DEFAULT_IMAGE} /> */}
 
         {/* Structured Data (JSON-LD) */}
-        <script
+        {/* <script
           type="application/ld+json"
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{
@@ -98,9 +98,9 @@ export default function RootLayout({ children }) {
               ],
             }),
           }}
-        />
+        /> */}
 
-        <script
+        {/* <script
           type="application/ld+json"
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{
@@ -116,7 +116,7 @@ export default function RootLayout({ children }) {
               },
             }),
           }}
-        />
+        /> */}
       </head>
       <body className={`${proximaNova.variable} antialiased`}>
         <AuthProvider>
@@ -126,7 +126,7 @@ export default function RootLayout({ children }) {
           <Toaster position="top-center" richColors />
         </AuthProvider>
 
-        <Script
+        {/* <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-VMEQP6Y848"
           strategy="afterInteractive"
         />
@@ -138,7 +138,7 @@ export default function RootLayout({ children }) {
     gtag('js', new Date());
     gtag('config', 'G-VMEQP6Y848');
   `}
-        </Script>
+        </Script> */}
       </body>
     </html>
   );

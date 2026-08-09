@@ -180,7 +180,7 @@ export default function ProductCard1({ product, badge, discount }) {
             )}
           </div>
 
-          <h1 className="text-sm font-medium text-gray-900 line-clamp-4 text-left">
+          <h1 className="text-sm font-medium text-gray-900 line-clamp-3 text-left">
             {product.fullName}
           </h1>
 

@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -7,17 +8,42 @@ import { Autoplay, Pagination, Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
-import { useAuth } from "@/context/AuthContext";
+import { apiConnector } from "@/lib/services/apiConnector";
+import { homeEndPoints } from "@/lib/api";
+
+const { GET_WEBSITE_BANNERS } = homeEndPoints;
 
 export default function BannerHome() {
-  const { homeBanners } = useAuth();
-  
-  if (!homeBanners?.length) {
+  const [banners, setBanners] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBanners = async () => {
+      try {
+        const response = await apiConnector("GET", GET_WEBSITE_BANNERS);
+        setBanners(response?.data?.data || []);
+      } catch (err) {
+        console.error("Failed to load banners", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBanners();
+  }, []);
+
+  if (loading) {
     return (
-      <div className="w-full aspect-[1920/460]">
-        <div className="bg-gray-200 w-full aspect-[1920/460] animate-pulse" />
+      <div className="w-full pb-6 mx-auto">
+        {/* Desktop skeleton aspect 1920:460 */}
+        <div className="hidden min-[501px]:block w-full aspect-[1920/460] bg-slate-200 dark:bg-slate-800 animate-pulse" />
+        {/* Mobile skeleton aspect 1:1 */}
+        <div className="block min-[501px]:hidden w-full aspect-square bg-slate-200 dark:bg-slate-800 animate-pulse" />
       </div>
     );
+  }
+
+  if (!banners.length) {
+    return null;
   }
 
   return (
@@ -35,9 +61,8 @@ export default function BannerHome() {
         pagination={{ clickable: true }}
         className="overflow-hidden"
       >
-        {homeBanners.map((item, idx) => {
-          // Normalize item if it's a string (safeguard)
-          const banner = typeof item === "string" 
+        {banners.map((item, idx) => {
+          const banner = typeof item === "string"
             ? { desktopUrl: item, mobileUrl: item, redirectUrl: "" }
             : item;
 
@@ -51,6 +76,7 @@ export default function BannerHome() {
                   fill
                   className="object-cover object-center"
                   priority={idx === 0}
+                  unoptimized
                 />
               </div>
               {/* Mobile banner: visible on screens up to 500px (1:1 aspect ratio) */}
@@ -61,6 +87,7 @@ export default function BannerHome() {
                   fill
                   className="object-cover object-center"
                   priority={idx === 0}
+                  unoptimized
                 />
               </div>
             </>
