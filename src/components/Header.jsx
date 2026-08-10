@@ -78,7 +78,7 @@ export default function Header() {
     <>
       {/* Desktop Header */}
       <header className="sticky top-0 z-40 w-full bg-white border-b border-slate-200 shadow-none hidden md:block">
-        <div className="container mx-auto px-4 py-2 flex items-center justify-between max-w-[1400px]">
+        <div className="container mx-auto px-4 py-2 flex items-center justify-between sm:max-w-[90%]">
           {/* Left: Brand Logo & Title */}
           <Link href="/" className="flex-shrink-0 py-2 mr-15">
             <div className="flex items-center gap-1.5 justify-center">

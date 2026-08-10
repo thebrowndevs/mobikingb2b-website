@@ -180,7 +180,7 @@ export default function ProductCard1({ product, badge, discount }) {
             )}
           </div>
 
-          <h1 className="text-sm font-medium text-gray-900 line-clamp-3 text-left">
+          <h1 className="text-sm font-medium text-gray-900 line-clamp-3 text-left h-[3.75rem] leading-5">
             {product.fullName}
           </h1>
 
@@ -196,7 +196,7 @@ export default function ProductCard1({ product, badge, discount }) {
           </div>
         </Link>        {/* Price + MOQ */}
         <div className="mt-2 pt-2 border-t border-slate-100 flex flex-col items-start gap-1">
-          <p className="text-sm font-extrabold text-[#ED1C24]">
+          <p className="text-sm font-semibold text-[#ED1C24]">
             {product.minPrice !== undefined && product.maxPrice !== undefined ? (
               product.minPrice === product.maxPrice ? (
                 `₹${product.minPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`

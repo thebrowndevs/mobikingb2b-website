@@ -218,7 +218,7 @@ export default function ProductClient({ product }) {
 
     return (
         <div>
-            <div className="w-full max-w-[1600px] mx-auto px-4 py-4 lg:py-3">
+            <div className="w-full lg:max-w-[90%] mx-auto px-4 py-4 lg:py-3">
                 <div className="flex flex-col md:flex-row gap-6 lg:gap-4">
                     {/* Image Gallery Section */}
                     <div className="sm:sticky sm:top-22 sm:h-screen w-full sm:w-[40%]">
@@ -232,11 +232,11 @@ export default function ProductClient({ product }) {
 
                     {/* Product Info Section */}
                     <div className="space-y-3 flex-1">
-                        <div className="pb-2 border-b">
-                            <span className="text-sm text-muted-foreground">
+                        <div className="pb-2 ">
+                            {/* <span className="text-sm text-muted-foreground">
                                 {product?.category?.name || "Electronics"}
-                            </span>
-                            <h1 className="text-2xl md:text-2xl font-semibold text-gray-900 mt-1">
+                            </span> */}
+                            <h1 className="text-2xl md:text-2xl font-semibold tracking-tight text-gray-900 mt-1">
                                 {product?.fullName}
                             </h1>
 
@@ -255,8 +255,8 @@ export default function ProductClient({ product }) {
 
                         {/* Dynamic B2B Price Slabs Section */}
                         {product.sellingPrice?.slabs && product.sellingPrice.slabs.length > 0 ? (
-                            <div className="bg-slate-50 border border-slate-100 rounded-xl p-5 mb-1 shadow-sm">
-                                <div className="grid grid-cols-3 gap-6 text-center divide-x divide-slate-200">
+                            <div className="mb-2">
+                                <div className="grid grid-cols-3 gap-3 text-center">
                                     {product.sellingPrice.slabs.map((slab, index) => {
                                         const minQty = slab.quantity;
                                         const nextSlab = product.sellingPrice.slabs[index + 1];
@@ -265,11 +265,17 @@ export default function ProductClient({ product }) {
                                         const isActive = activeSlabIndex === index;
 
                                         return (
-                                            <div key={index} className="flex flex-col items-center justify-center px-1">
-                                                <span className={`text-2xl md:text-3xl font-extrabold ${isActive ? "text-slate-900 scale-105" : "text-slate-400"} transition-all duration-200`}>
+                                            <div
+                                                key={index}
+                                                className={`flex flex-col items-center justify-center p-3 rounded-sm border shadow-none transition-all duration-200 ${isActive
+                                                    ? "bg-white border-slate-900 text-slate-900"
+                                                    : "bg-white border-slate-200 text-slate-400"
+                                                    }`}
+                                            >
+                                                <span className={`text-lg md:text-2xl font-bold ${isActive ? "text-slate-900" : "text-slate-700"}`}>
                                                     ₹{slab.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                 </span>
-                                                <span className={`text-xs ${isActive ? "text-slate-800 font-bold" : "text-slate-400 font-medium"} mt-1.5 capitalize tracking-wide`}>
+                                                <span className={`text-[10px] sm:text-xs ${isActive ? "text-slate-800 font-bold" : "text-slate-400 font-medium"} mt-1 capitalize tracking-wide`}>
                                                     {rangeLabel}
                                                 </span>
                                             </div>
@@ -300,10 +306,9 @@ export default function ProductClient({ product }) {
                             </div>
                         )}
 
-                        <Separator />
 
                         {/* Interactive Variant Selectors & Quick Add to Cart */}
-                        <div className="space-y-4 pt-2">
+                        <div className="space-y-4 pt-4">
                             {/* Variant Select by Name Chips */}
                             <div>
                                 <h3 className="text-sm font-bold text-slate-700 mb-2">Variant Options</h3>
@@ -320,11 +325,18 @@ export default function ProductClient({ product }) {
                                                     setSelectedVariantId(v._id);
                                                     setCurrentImage(0); // Reset image index
                                                 }}
-                                                className={`relative px-4 py-2 rounded-md border text-sm font-medium transition duration-200 flex items-center gap-2 ${isSelected
-                                                        ? "border-slate-900 bg-slate-900 text-white shadow-sm"
-                                                        : "border-slate-200 bg-white text-slate-700 hover:border-slate-400"
+                                                className={`relative pl-1.5 pr-4 py-1 rounded-md border text-sm font-medium transition duration-200 flex items-center gap-2 ${isSelected
+                                                    ? "border-slate-900 bg-slate-900 text-white shadow-sm"
+                                                    : "border-slate-200 bg-white text-slate-700 hover:border-slate-400"
                                                     }`}
                                             >
+                                                {v.images?.[0] && (
+                                                    <img
+                                                        src={v.images[0]}
+                                                        alt={v.name}
+                                                        className="w-8 h-8 object-contain rounded bg-slate-50 border border-slate-100"
+                                                    />
+                                                )}
                                                 <span className="capitalize">{v.name}</span>
                                                 {cartQty > 0 && (
                                                     <span className={`text-[10px] px-1.5 py-0.5 rounded font-black ${isSelected ? "bg-white text-slate-900" : "bg-slate-100 text-slate-700"
@@ -483,7 +495,7 @@ export default function ProductClient({ product }) {
                                         description={product.description}
                                     />
 
-                                    <Card className="mt-0">
+                                    {/* <Card className="mt-0">
                                         <CardContent>
                                             <h4 className="font-medium text-gray-900 mb-3">Additional Information</h4>
                                             <div className="grid grid-cols-2 gap-4">
@@ -497,7 +509,7 @@ export default function ProductClient({ product }) {
                                                 </div>
                                             </div>
                                         </CardContent>
-                                    </Card>
+                                    </Card> */}
                                 </div>
                             </div>
                         </div>

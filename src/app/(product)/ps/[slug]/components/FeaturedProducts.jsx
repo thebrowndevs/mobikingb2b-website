@@ -18,25 +18,23 @@ export default function FeaturedProducts({ title = "Featured Products", products
     };
 
     return (
-        <section className="py-10">
-            <h2 className="text-xl lg:text-2xl font-bold mb-5 px-2 sm:px-4 lg:px-8 max-[500px]:text-center max-[500px]:border max-[500px]:py-3 max-[500px]:mx-4 max-[500px]:bg-white max-[500px]:border-black max-[500px]:rounded-sm">Explore {title}</h2>
-            <div className="overflow-x-auto px-4 sm:px-0">
-                <div className="grid grid-flow-col grid-rows-2 max-w-[95vw] mx-auto sm:grid-rows-1 gap-2 lg:grid-cols-7 lg:grid-flow-row">
-                    {products.map((product) => {
-                        const badge = getBadgeType(product);
-                        const discount = calculateDiscount(product);
+        <section className="py-10 border-t-1 border-gray-300 lg:max-w-[90%] lg:mx-auto px-4">
+            <h2 className="text-2xl lg:text-3xl font-semibold mb-9 lg:mb-10 uppercase text-center">Explore {title}</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-3 w-full">
+                {products.map((product) => {
+                    const badge = getBadgeType(product);
+                    const discount = calculateDiscount(product);
 
-                        return (
-                            <div key={product._id} className=" h-full">
-                                <ProductCard1
-                                    product={product}
-                                    badge={badge}
-                                    discount={discount}
-                                />
-                            </div>
-                        );
-                    })}
-                </div>
+                    return (
+                        <div key={product._id} className="h-full">
+                            <ProductCard1
+                                product={product}
+                                badge={badge}
+                                discount={discount}
+                            />
+                        </div>
+                    );
+                })}
             </div>
         </section>
     );
