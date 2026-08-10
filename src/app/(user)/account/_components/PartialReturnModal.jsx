@@ -180,30 +180,21 @@ export default function PartialReturnModal({ open, onOpenChange, order, refreshO
                     )}
                   </div>
 
-                  {/* Quantity Counter for selected items */}
+                  {/* Quantity Input for selected items */}
                   {isChecked && !isAlreadyReturned && (
-                    <div className="flex items-center border rounded-md overflow-hidden bg-white shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => handleQtyChange(key, it.quantity, -1)}
-                        disabled={currentQty <= 1}
-                        className="p-1.5 hover:bg-gray-100 disabled:opacity-30 text-gray-600"
-                      >
-                        <Minus className="w-3.5 h-3.5" />
-                      </button>
-
-                      <span className="px-2 py-0.5 text-xs font-bold min-w-[24px] text-center">
-                        {currentQty}
-                      </span>
-
-                      <button
-                        type="button"
-                        onClick={() => handleQtyChange(key, it.quantity, 1)}
-                        disabled={currentQty >= it.quantity}
-                        className="p-1.5 hover:bg-gray-100 disabled:opacity-30 text-gray-600"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                      </button>
+                    <div className="flex items-center shrink-0">
+                      <Input
+                        type="number"
+                        min={1}
+                        max={it.quantity}
+                        value={currentQty}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value) || 1;
+                          const nextVal = Math.max(1, Math.min(it.quantity, val));
+                          setQuantities(prev => ({ ...prev, [key]: nextVal }));
+                        }}
+                        className="w-16 h-7 text-center font-bold border-gray-200 focus:border-primary rounded-md text-xs p-1 bg-white"
+                      />
                     </div>
                   )}
                 </div>

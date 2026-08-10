@@ -73,10 +73,10 @@ export const orderEndpoints = {
   PLACE_CANCEL_REQUEST_API: `${baseUrl}/users/request/cancel`,
   PLACE_WARRANTY_REQUEST_API: `${baseUrl}/users/request/warranty`,
   PLACE_RETURN_REQUEST_API: `${baseUrl}/users/request/return`,
-  PLACE_PARTIAL_RETURN_REQUEST_API: `${baseUrl.replace('/api/v1', '/api/v2')}/orders/partial-return/raise`,
-  PLACE_PARTIAL_RETURN_REPLY_API: `${baseUrl.replace('/api/v1', '/api/v2')}/orders/partial-return/reply`,
-  GET_PARTIAL_RETURN_REQUEST_API: `${baseUrl.replace('/api/v1', '/api/v2')}/orders/partial-return/requests`,
-  GET_PARTIAL_RETURN_REQUESTS_BY_ORDER_API: `${baseUrl.replace('/api/v1', '/api/v2')}/orders/partial-return/requests/order`,
+  PLACE_PARTIAL_RETURN_REQUEST_API: `${baseUrl}/orders/partial-return/raise`,
+  PLACE_PARTIAL_RETURN_REPLY_API: `${baseUrl}/orders/partial-return/reply`,
+  GET_PARTIAL_RETURN_REQUEST_API: `${baseUrl}/orders/partial-return/requests`,
+  GET_PARTIAL_RETURN_REQUESTS_BY_ORDER_API: `${baseUrl}/orders/partial-return/requests/order`,
 }
 
 export const profileEndpoints = {
