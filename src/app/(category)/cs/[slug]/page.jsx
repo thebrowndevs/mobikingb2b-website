@@ -132,11 +132,11 @@ export default function CategoryProductsPage() {
 
   return (
     <div className="w-full py-6 px-4 sm:px-6 lg:px-8">
-      <div className="w-full mx-auto">
+      <div className="w-full md:max-w-[90%] mx-auto">
         <Breadcrumb />
 
         <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-gray-900 capitalize">
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight capitalize">
             {categoryName}
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">

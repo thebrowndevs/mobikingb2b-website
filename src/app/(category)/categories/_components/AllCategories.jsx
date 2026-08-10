@@ -1,14 +1,14 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
-import { Loader2 } from "lucide-react";
+import { Loader2, ChevronRight, LayoutGrid } from "lucide-react";
 import { getCategories } from "@/lib/services/operations/HomeApi";
-import { ChevronRight, Sparkles, LayoutGrid } from "lucide-react";
 
 export default function AllCategories() {
   const [categories, setCategories] = useState([]);
+  const [activeCategoryId, setActiveCategoryId] = useState("");
+  const [selectedCategoryMobile, setSelectedCategoryMobile] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,7 +23,12 @@ export default function AllCategories() {
             Array.isArray(d.subCategories) &&
             d.subCategories.some((s) => s?.active !== false)
         );
-        if (mounted) setCategories(active);
+        if (mounted) {
+          setCategories(active);
+          if (active.length > 0) {
+            setActiveCategoryId(active[0]._id);
+          }
+        }
       } catch (err) {
         console.error("Error fetching categories:", err);
       } finally {
@@ -33,11 +38,47 @@ export default function AllCategories() {
     return () => (mounted = false);
   }, []);
 
+  const activeCategory = categories.find((c) => c._id === activeCategoryId);
+  const visibleSubs = activeCategory 
+    ? (activeCategory.subCategories || []).filter((s) => s?.active !== false)
+    : [];
+
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[50vh]">
-        <Loader2 className="w-10 h-10 animate-spin text-gray-600" />
-      </div>
+      <section className="w-full pb-16 pt-4 bg-slate-50">
+        <div className="w-full md:max-w-[90%] mx-auto px-4">
+          {/* Header Skeleton */}
+          <div className="mb-6 pt-4 space-y-2 animate-pulse">
+            <div className="h-8 w-64 bg-slate-200 rounded-sm" />
+            <div className="h-4 w-96 bg-slate-200 rounded-sm" />
+          </div>
+
+          <div className="flex flex-col md:flex-row gap-6 items-start mt-6">
+            {/* Left Sidebar Skeleton */}
+            <div className="w-full md:w-[280px] bg-white border border-slate-200 rounded-sm overflow-hidden flex-shrink-0 p-4 space-y-4 animate-pulse">
+              {Array.from({ length: 6 }).map((_, idx) => (
+                <div key={idx} className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-sm bg-slate-200" />
+                  <div className="h-4 w-3/4 bg-slate-200 rounded-sm" />
+                </div>
+              ))}
+            </div>
+
+            {/* Right Grid Skeleton */}
+            <div className="flex-1 w-full bg-white border border-slate-200 rounded-sm p-6 min-h-[50vh] animate-pulse">
+              <div className="h-6 w-48 bg-slate-200 rounded-sm mb-6" />
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                {Array.from({ length: 8 }).map((_, idx) => (
+                  <div key={idx} className="border border-slate-100 rounded-sm p-3 flex flex-col items-center gap-3">
+                    <div className="w-full aspect-square rounded-sm bg-slate-200" />
+                    <div className="h-4 w-3/4 bg-slate-200 rounded-sm" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     );
   }
 
@@ -45,144 +86,201 @@ export default function AllCategories() {
     return (
       <section className="w-full px-4 py-16">
         <div className="max-w-4xl mx-auto text-center">
-          <h3 className="text-lg font-semibold">No categories found</h3>
-          <p className="text-sm text-gray-500 mt-2">Please check back later.</p>
+          <h3 className="text-lg font-semibold text-slate-800">No categories found</h3>
+          <p className="text-sm text-slate-500 mt-2">Please check back later.</p>
         </div>
       </section>
     );
   }
 
   return (
-    <section className="w-full pb-10">
-      <div className="max-w-[1450px] mx-auto">
-        <header className="mb-6">
-          {/* Enhanced Mobile Header */}
-          <div className="sm:hidden relative mb-4 overflow-hidden ">
-            <div className="absolute inset-0 bg-gradient-to-r from-black/90 to-gray-800 z-0"></div>
-            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgdmlld0JveD0iMCAwIDYwIDYwIj48ZyBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYiIHN0cm9rZS1vcGFjaXR5PSIwLjEiIHN0cm9rZS13aWR0aD0iMiI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMTUiLz48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyNSIvPjwvZz48L3N2Zz4=')] z-0 opacity-20"></div>
-
-            <div className="relative z-10 px-6 py-8 text-center">
-              <div className="flex justify-center mb-3">
-                <div className="bg-white/20 p-3 rounded-full backdrop-blur-sm">
-                  <LayoutGrid className="w-6 h-6 text-white" />
-                </div>
-              </div>
-              <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">
-                Shop by Category
-              </h1>
-              <p className="text-purple-100 text-sm max-w-xs mx-auto leading-relaxed">
-                Discover our carefully curated collections tailored just for you
-              </p>
-            </div>
-
-            {/* Decorative elements */}
-            <div className="absolute -bottom-4 left-0 right-0 flex justify-center z-10">
-              <div className="w-32 h-1 bg-white/30 rounded-full"></div>
-            </div>
-          </div>
-
-          {/* Desktop/Large screen header (unchanged) */}
-          <div className="hidden sm:flex items-center pt-10 justify-between">
-            <h1 className="text-3xl font-bold ">Shop by Category</h1>
-          </div>
+    <section className="w-full pb-16 pt-4 bg-slate-50">
+      <div className="w-full md:max-w-[90%] mx-auto px-4">
+        
+        {/* Page Header */}
+        <header className="mb-6 pt-4">
+          <h1 className="text-center sm:text-left text-xl sm:text-2xl font-bold uppercase text-slate-800 tracking-wide">
+            Shop by Categories
+          </h1>
+          <p className="text-center sm:text-left text-xs text-slate-500 mt-1">
+            Browse through our wholesale categories and collections
+          </p>
         </header>
 
-
-        {/* Responsive grid */}
-        <div className="grid grid-cols-2 px-3 sm:px-0 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-2 lg:gap-2">
-          {categories.map((category) => {
-            // show only active subcategories
-            const visibleSubs = (category.subCategories || []).filter((s) => s?.active !== false);
-
-            return (
-              <article
-                key={category._id}
-                className="bg-white rounded-sm border hover:border-black transition-shadow duration-200 overflow-hidden flex flex-col"
-                aria-labelledby={`cat-${category._id}-title`}
+        {/* ---------------------------------------------------- */}
+        {/* MOBILE VIEW LAYOUT (Step-by-step Card Navigation) */}
+        {/* ---------------------------------------------------- */}
+        <div className="block md:hidden mt-6">
+          {selectedCategoryMobile === null ? (
+            /* Phase 1: Show parent categories as cards */
+            <div className="grid grid-cols-2 gap-4">
+              {categories.map((category) => (
+                <button
+                  key={category._id}
+                  onClick={() => setSelectedCategoryMobile(category)}
+                  className="bg-white border border-slate-200 rounded-sm p-3 flex flex-col items-center text-center transition hover:border-indigo-650"
+                >
+                  <div className="relative w-full aspect-square rounded-sm overflow-hidden bg-slate-250 border border-slate-200 mb-3 flex-shrink-0">
+                    {category.image ? (
+                      <img 
+                        src={category.image} 
+                        alt={category.name} 
+                        className="w-full h-full object-cover p-1 rounded-sm" 
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-slate-200" />
+                    )}
+                  </div>
+                  <span className="text-xs sm:text-sm font-semibold text-slate-800 capitalize truncate w-full">
+                    {category.name}
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-medium mt-1">
+                    {(category.subCategories || []).filter(s => s.active !== false).length} Subcategories
+                  </span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            /* Phase 2: Show subcategories grid of the selected parent category */
+            <div className="w-full">
+              <button
+                onClick={() => setSelectedCategoryMobile(null)}
+                className="flex items-center gap-1.5 text-indigo-650 font-bold text-xs mb-5 px-1 py-1"
               >
-                {/* Square image */}
-                <div className="relative w-full" style={{ paddingTop: "100%" }}>
-                  {category.image ? (
-                    <Image
-                      src={category.image}
-                      alt={category.name || "Category image"}
-                      fill
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      className="object-cover"
-                      priority={false}
-                    />
-                  ) : (
-                    <div className="absolute inset-0 bg-gray-100 flex items-center justify-center text-gray-400">
-                      No image
-                    </div>
-                  )}
+                &larr; Back to Categories
+              </button>
+              
+              <div className="pb-3 border-b border-slate-200 mb-5">
+                <h2 className="text-lg font-bold text-slate-850 capitalize">
+                  {selectedCategoryMobile.name}
+                </h2>
+                <p className="text-[11px] text-slate-500">
+                  Select a subcategory to browse products
+                </p>
+              </div>
 
-                  {/* TRAPEZIUM LABEL */}
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[75%] text-center">
-                    <div
-                      className="bg-white text-black text-sm font-semibold py-1 px-3"
-                      style={{
-                        clipPath: "polygon(5% 0, 95% 0, 85% 100%, 15% 100%)",
-                        borderRadius: "8px",         // thoda rounded
-                        overflow: "hidden"           // rounded corners visible hone ke liye
-                      }}
-                    >
-                      {category.name}
-                    </div>
-                  </div>
+              <div className="grid grid-cols-2 gap-4">
+                {(selectedCategoryMobile.subCategories || [])
+                  .filter((s) => s?.active !== false)
+                  .map((sub) => {
+                    const previewImage = sub.photos?.[0] || "/not-found-img.webp";
+                    return (
+                      <Link
+                        key={sub._id}
+                        href={`/cs/${sub.slug}`}
+                        className="bg-white border border-slate-200 hover:border-indigo-600 rounded-sm overflow-hidden p-3 flex flex-col items-center text-center transition-all duration-300"
+                      >
+                        <div className="relative w-full aspect-square rounded-sm overflow-hidden bg-slate-50 border border-slate-100 mb-3">
+                          <img 
+                            src={previewImage} 
+                            alt={sub.name} 
+                            className="object-cover w-full h-full p-1 rounded-sm" 
+                          />
+                        </div>
+                        <span className="text-xs sm:text-sm font-semibold text-slate-700 group-hover:text-indigo-650 transition truncate w-full px-1 capitalize">
+                          {sub.name}
+                        </span>
+                      </Link>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
+        </div>
 
-                  <div className="absolute left-3 bottom-3 bg-black/70 text-white text-xs px-2 py-1 rounded-md">
-                    {visibleSubs.length}
-                  </div>
-                </div>
-
-                <div className="p-2 md:p-4 flex-1 flex flex-col">
-                  {/* SUBCATEGORIES */}
-                  <div className="my-1">
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-1 md:grid-cols-1">
-                      {visibleSubs.length === 0 ? (
-                        <span className="text-sm text-gray-400">No active subcategories</span>
+        {/* ---------------------------------------------------- */}
+        {/* DESKTOP VIEW LAYOUT (Sticky Sidebar catalog browser) */}
+        {/* ---------------------------------------------------- */}
+        <div className="hidden md:flex flex-row gap-6 items-start mt-6">
+          
+          {/* LEFT SIDEBAR: Parent Categories */}
+          <div className="w-[280px] flex-shrink-0 sticky top-24 bg-white border border-slate-200 rounded-sm overflow-hidden">
+            <div className="px-4 py-3 bg-slate-50 border-b border-slate-200">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Categories</span>
+            </div>
+            
+            <div className="flex flex-col divide-y divide-slate-100 p-0">
+              {categories.map((category) => {
+                const isActive = category._id === activeCategoryId;
+                return (
+                  <button
+                    key={category._id}
+                    onClick={() => setActiveCategoryId(category._id)}
+                    className={`flex items-center gap-3 w-full px-4 py-3 text-left transition-all duration-205 flex-shrink-0 border-l-4 ${
+                      isActive 
+                        ? "bg-indigo-50 border-indigo-600 text-indigo-650 font-bold" 
+                        : "bg-white border-transparent text-slate-650 hover:bg-slate-50/80"
+                    }`}
+                  >
+                    <div className="relative w-8 h-8 rounded-sm overflow-hidden bg-slate-250 border border-slate-200 flex-shrink-0">
+                      {category.image ? (
+                        <img 
+                          src={category.image} 
+                          alt={category.name} 
+                          className="w-full h-full object-cover" 
+                        />
                       ) : (
-                        visibleSubs.map((sub) => (
-                          <Link
-                            key={sub._id}
-                            href={`/cs/${sub.slug}`}
-                            className="block text-start text-sm px-3 py-2 bg-gray-50 hover:bg-gray-100 hover:border-gray-400 text-gray-700 transition"
-                          >
-                            {sub.name}
-                          </Link>
-                        ))
+                        <div className="w-full h-full bg-slate-200" />
                       )}
                     </div>
-                  </div>
+                    <span className="text-sm capitalize truncate">{category.name}</span>
+                    <ChevronRight size={14} className="ml-auto opacity-60" />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-                  {/* Full-width transparent Show all button with border */}
-                  {/* <div className="mt-auto">
-                    <Link
-                      href={`/cs/${category.slug || ""}`}
-                      className="block w-full text-center border border-black/80 text-white hover:bg-black/80 bg-black/90 px-3 py-2 rounded-md transition"
-                      aria-label={`Show all in ${category.name}`}
-                    >
-                      Show all
-                    </Link>
-                  </div> */}
+          {/* RIGHT VIEW: Selected Category Subcategories Grid */}
+          <div className="flex-1 w-full bg-white border border-slate-200 rounded-sm p-6 min-h-[50vh]">
+            {activeCategory && (
+              <>
+                <div className="flex flex-row items-center justify-between pb-4 border-b border-slate-100 mb-6 gap-3">
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-800 capitalize">
+                      {activeCategory.name}
+                    </h2>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Showing {visibleSubs.length} subcategories in this section
+                    </p>
+                  </div>
                 </div>
-              </article>
-            );
-          })}
+
+                {visibleSubs.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-20 text-center">
+                    <span className="text-sm text-slate-400 font-medium">No subcategories listed under this category.</span>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 lg:grid-cols-4 gap-4">
+                    {visibleSubs.map((sub) => {
+                      const previewImage = sub.photos?.[0] || "/not-found-img.webp";
+                      return (
+                        <Link
+                          key={sub._id}
+                          href={`/cs/${sub.slug}`}
+                          className="group bg-white border border-slate-200 hover:border-indigo-600 rounded-sm overflow-hidden p-3 flex flex-col items-center text-center transition-all duration-300"
+                        >
+                          <div className="relative w-full aspect-square rounded-sm overflow-hidden bg-slate-50 border border-slate-100 mb-3">
+                            <img 
+                              src={previewImage} 
+                              alt={sub.name} 
+                              className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105 p-1 rounded-sm" 
+                            />
+                          </div>
+                          <span className="text-sm font-semibold text-slate-700 group-hover:text-indigo-650 transition truncate w-full px-1 capitalize">
+                            {sub.name}
+                          </span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
         </div>
       </div>
-
-      {/* hide scrollbar helper (optional) */}
-      <style jsx>{`
-        .hide-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .hide-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
     </section>
   );
 }

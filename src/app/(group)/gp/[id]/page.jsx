@@ -25,7 +25,7 @@ export default function GroupPage() {
         paginationRef.current = pagination;
     }, [pagination]);
 
-    // ✅ Fetch products for this group
+    // Fetch products for this group
     const fetchProducts = useCallback(
         async (cursor = null, initial = false) => {
             if (!initial && !paginationRef.current.hasMore) return;
@@ -73,12 +73,12 @@ export default function GroupPage() {
         [id]
     );
 
-    // ✅ Initial load
+    // Initial load
     useEffect(() => {
         fetchProducts(-1, true);
     }, [id, fetchProducts]);
 
-    // ✅ Infinite scroll
+    // Infinite scroll
     useEffect(() => {
         if (loading || loadingMore || !pagination.hasMore) return;
 
@@ -118,12 +118,29 @@ export default function GroupPage() {
         };
     }, [products.length, pagination.hasMore, loadingMore, fetchProducts]);
 
-    if (loading)
+    if (loading) {
         return (
-            <div className="h-80 w-full flex items-center justify-center">
-                <Loader2 className="animate-spin w-12 h-12 text-gray-400" />
+            <div className="w-full pb-16 pt-4 bg-slate-50">
+                <div className="w-full lg:max-w-[90%] mx-auto px-4">
+                    {/* Banner Skeleton */}
+                    <div className="hidden min-[501px]:block w-full aspect-[16/3] bg-slate-200 animate-pulse rounded-sm mb-6" />
+                    <div className="block min-[501px]:hidden w-full aspect-[2/1] bg-slate-200 animate-pulse rounded-sm mb-6" />
+                    {/* Header Skeleton */}
+                    <div className="h-8 w-64 bg-slate-200 animate-pulse rounded-sm mb-8" />
+                    {/* Grid Skeleton */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                        {Array.from({ length: 12 }).map((_, idx) => (
+                            <div key={idx} className="bg-white border border-slate-100 rounded-sm p-3 animate-pulse space-y-3">
+                                <div className="w-full aspect-square bg-slate-200 rounded-sm" />
+                                <div className="h-4 w-3/4 bg-slate-200 rounded-sm" />
+                                <div className="h-4 w-1/2 bg-slate-200 rounded-sm" />
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
         );
+    }
 
     if (!group)
         return (
@@ -132,19 +149,17 @@ export default function GroupPage() {
             </div>
         );
 
-    const {
-        name,
-        banner,
-        bannerLink,
-        isBannerVisble,
-        isBannerLinkActive,
-        isBackgroundColorVisible,
-        backgroundColor,
-    } = group;
+    // Support both website keys and legacy backend API keys
+    const name = group.heading || group.name;
+    const webBanner = group.webBanner || group.banner;
+    const bannerLink = group.bannerLink;
+    const isWebBannerVisible = group.isWebBannerVisible !== undefined ? group.isWebBannerVisible : group.isBannerVisble;
+    const isWebBgColorVisible = group.isWebBgColorVisible !== undefined ? group.isWebBgColorVisible : group.isBackgroundColorVisible;
+    const webBackgroundColor = group.webBackgroundColor || group.backgroundColor || "#ffffff";
+    const isBannerLinkActive = group.isBannerLinkActive !== undefined ? group.isBannerLinkActive : true;
 
-    // ✅ Auto-detect text color based on background brightness
-    const bgColor = backgroundColor || "#ffffff";
-    // console.log(bgColor)
+    // Auto-detect text color based on background brightness
+    const bgColor = webBackgroundColor;
     const rgb = parseInt(bgColor.substring(1), 16);
     const r = (rgb >> 16) & 0xff;
     const g = (rgb >> 8) & 0xff;
@@ -154,77 +169,101 @@ export default function GroupPage() {
 
     return (
         <section
-            className={`transition-all duration-300 pb-8 ${isBackgroundColorVisible ? "pt-3 sm:pt-6" : "pt-3 sm:pt-6"
-                }`}
+            className={`transition-all duration-300 pb-16 ${
+                isWebBgColorVisible ? "pt-3 sm:pt-6" : "pt-3 sm:pt-6"
+            }`}
             style={{
-                backgroundColor: isBackgroundColorVisible ? bgColor : "transparent",
+                backgroundColor: isWebBgColorVisible ? bgColor : "transparent",
             }}
         >
-            {/* ✅ Banner Section */}
-            {isBannerVisble && banner ? (
-                <div className="relative mb-5 overflow-hidden px-2 sm:px-4">
-                    <div className="relative aspect-[12/5] w-full">
-                        {isBannerLinkActive && bannerLink ? (
-                            <a href={bannerLink} target="_blank" rel="noopener noreferrer">
+            <div className="w-full lg:max-w-[90%] lg:mx-auto px-4">
+                
+                {/* Banner Section */}
+                {isWebBannerVisible && webBanner ? (
+                    <div className="relative mb-6 overflow-hidden">
+                        {/* Desktop layout: 16:3 aspect ratio */}
+                        <div className="hidden min-[501px]:block relative aspect-[16/3] w-full">
+                            {isBannerLinkActive && bannerLink ? (
+                                <a href={bannerLink} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                                    <img
+                                        src={webBanner}
+                                        alt={name}
+                                        className="absolute inset-0 w-full h-full object-cover rounded-sm"
+                                    />
+                                </a>
+                            ) : (
                                 <img
-                                    src={banner}
+                                    src={webBanner}
                                     alt={name}
-                                    className="absolute inset-0 w-full h-full object-cover rounded-lg shadow"
+                                    className="absolute inset-0 w-full h-full object-cover rounded-sm"
                                 />
-                            </a>
-                        ) : (
-                            <img
-                                src={banner}
-                                alt={name}
-                                className="absolute inset-0 w-full h-full object-cover rounded-lg shadow"
-                            />
-                        )}
-                    </div>
-                </div>
-            ) : null}
-
-            {/* ✅ Title */}
-            <div className="max-w-[97vw] mx-auto px-4 flex justify-between items-center mb-6">
-                <h1
-                    className={`relative inline-block text-2xl md:text-3xl font-bold capitalize ${isBackgroundColorVisible ? textColor : "text-gray-900"
-                        }`}
-                >
-                    {name}
-                    <span className="absolute left-0 -bottom-2 w-20 h-1 bg-gradient-to-r from-purple-500 to-teal-400 rounded-full"></span>
-                </h1>
-            </div>
-
-            {/* ✅ Product Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-7 gap-2 sm:gap-3 px-2 sm:px-4">
-                {products.map((product, idx) => {
-                    const isLast = idx === products.length - 1;
-                    return (
-                        <div
-                            key={product._id}
-                            className={`w-full ${isLast ? "product-last" : ""}`}
-                        >
-                            <ProductCard1 product={product} />
+                            )}
                         </div>
-                    );
-                })}
-            </div>
+                        {/* Mobile layout: 2:1 aspect ratio */}
+                        <div className="block min-[501px]:hidden relative aspect-[2/1] w-full">
+                            {isBannerLinkActive && bannerLink ? (
+                                <a href={bannerLink} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                                    <img
+                                        src={webBanner}
+                                        alt={name}
+                                        className="absolute inset-0 w-full h-full object-cover rounded-sm"
+                                    />
+                                </a>
+                            ) : (
+                                <img
+                                    src={webBanner}
+                                    alt={name}
+                                    className="absolute inset-0 w-full h-full object-cover rounded-sm"
+                                />
+                            )}
+                        </div>
+                    </div>
+                ) : null}
 
-            {/* ✅ Loading spinner while fetching more */}
-            {loadingMore && (
-                <div className="flex justify-center py-6">
-                    <Loader2 className="animate-spin w-8 h-8 text-gray-400" />
-                </div>
-            )}
-
-            {/* ✅ End text */}
-            {!pagination.hasMore && !loadingMore && (
-                <div
-                    className={`text-center py-6 text-sm sm:text-base ${textColor === "text-white" ? "text-gray-200" : "text-gray-600"
+                {/* Title */}
+                <div className="flex justify-between items-center mb-6 pt-2">
+                    <h1
+                        className={`text-2xl sm:text-3xl font-bold uppercase tracking-tight ${
+                            isWebBgColorVisible ? textColor : "text-gray-950"
                         }`}
-                >
-                    Thanks for shopping with Mobiking Wholesale.
+                    >
+                        {name}
+                    </h1>
                 </div>
-            )}
+
+                {/* Product Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                    {products.map((product, idx) => {
+                        const isLast = idx === products.length - 1;
+                        return (
+                            <div
+                                key={product._id}
+                                className={`w-full ${isLast ? "product-last" : ""}`}
+                            >
+                                <ProductCard1 product={product} />
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {/* Loading spinner while fetching more */}
+                {loadingMore && (
+                    <div className="flex justify-center py-8">
+                        <Loader2 className="animate-spin w-8 h-8 text-gray-400" />
+                    </div>
+                )}
+
+                {/* End text */}
+                {!pagination.hasMore && !loadingMore && (
+                    <div
+                        className={`text-center pt-10 pb-4 text-xs sm:text-sm font-medium ${
+                            textColor === "text-white" ? "text-gray-200" : "text-gray-400"
+                        }`}
+                    >
+                        Thanks for shopping with Mobiking Wholesale.
+                    </div>
+                )}
+            </div>
         </section>
     );
 }
