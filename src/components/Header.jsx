@@ -12,6 +12,7 @@ import {
   LayoutGrid
 } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import React, { useState, useMemo, useEffect, Suspense } from "react";
 
 import { Button } from "./ui/button";
@@ -51,6 +52,7 @@ const mobileNavItems = [
 ];
 
 export default function Header() {
+  const pathname = usePathname();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const { isAuthenticated, logout, user, loginOpen, setLoginOpen } = useAuth();
@@ -109,15 +111,15 @@ export default function Header() {
                 <>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="flex items-center gap-1 shadow-none font-semibold h-9 w-9 p-0 rounded-full hover:bg-slate-50">
+                      <Button variant="ghost" className="flex items-center justify-center shadow-none font-semibold h-10 w-10 p-0 rounded-full bg-slate-100 hover:bg-slate-200 border-0">
                         <User size={18} className="text-slate-700" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56 p-2 rounded-xl border border-slate-200 shadow-none">
+                    <DropdownMenuContent align="end" className="w-56 p-2 rounded-sm border border-slate-250 shadow-none">
                       {accountMenuItems.map((item, i) => item.auth && !isAuthenticated ? null : item.type === "separator" ? (
                         <DropdownMenuSeparator key={i} className="bg-slate-100" />
                       ) : (
-                        <DropdownMenuItem key={item.label} onClick={item.onClick ? actionHandlers[item.onClick] : undefined} asChild={!!item.href} className={clsx("rounded-lg font-semibold text-xs py-2", item.isDestructive ? "text-red-600 hover:bg-red-50" : "hover:bg-gray-50")}>
+                        <DropdownMenuItem key={item.label} onClick={item.onClick ? actionHandlers[item.onClick] : undefined} asChild={!!item.href} className={clsx("rounded-sm font-semibold text-xs py-2", item.isDestructive ? "text-red-600 hover:bg-red-50" : "hover:bg-gray-50")}>
                           {item.href ? (
                             <Link href={item.href} className="flex items-center gap-2 w-full">
                               <item.icon size={14} />
@@ -134,19 +136,19 @@ export default function Header() {
                     </DropdownMenuContent>
                   </DropdownMenu>
 
-                  <Button variant="ghost" className="relative p-0 h-9 w-9 rounded-full hover:bg-slate-50 shadow-none flex items-center justify-center" onClick={() => setIsWishlistOpen(true)}>
+                  <Button variant="ghost" className="relative p-0 h-10 w-10 rounded-full bg-slate-100 hover:bg-slate-200 shadow-none border-0 flex items-center justify-center" onClick={() => setIsWishlistOpen(true)}>
                     <Heart size={18} className="text-slate-700" />
                     {getNotificationCount("wishlist") > 0 && (
-                      <span className="absolute top-0 right-0 bg-primary text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center font-bold">
+                      <span className="absolute -top-1 -right-1 bg-[#ED1C24] text-white text-[8px] rounded-full w-4 h-4 flex items-center justify-center font-bold">
                         {getNotificationCount("wishlist")}
                       </span>
                     )}
                   </Button>
 
-                  <Button variant="ghost" className="relative p-0 h-9 w-9 rounded-full hover:bg-slate-50 shadow-none flex items-center justify-center" onClick={() => setIsCartOpen(true)}>
+                  <Button variant="ghost" className="relative p-0 h-10 w-10 rounded-full bg-slate-100 hover:bg-slate-200 shadow-none border-0 flex items-center justify-center" onClick={() => setIsCartOpen(true)}>
                     <ShoppingCart size={18} className="text-slate-700" />
                     {getNotificationCount("cart") > 0 && (
-                      <span className="absolute top-0 right-0 bg-primary text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center font-bold">
+                      <span className="absolute -top-1 -right-1 bg-[#ED1C24] text-white text-[8px] rounded-full w-4 h-4 flex items-center justify-center font-bold">
                         {getNotificationCount("cart")}
                       </span>
                     )}
@@ -177,18 +179,17 @@ export default function Header() {
       </header>
 
       {/* Mobile Logo Row */}
-      <div className="md:hidden bg-white border-b border-slate-150 shadow-none py-1.5">
-        <div className="flex items-center justify-between px-4 py-1.5">
+      <div className="md:hidden bg-white border-b border-slate-150 shadow-none py-2">
+        <div className="flex items-center justify-between px-4">
           <Link href="/" className="flex-shrink-0">
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
               <img
                 src="/miniLogo.png"
                 alt="Mobiking B2B"
-                className="h-9 w-9 object-contain"
+                className="h-8 w-8 object-contain"
               />
               <div>
-                <h1 className="font-bold text-sm tracking-tighter text-slate-800">Mobiking B2B</h1>
-                <p className="text-[9px] text-gray-500 font-medium">B2B Electronics</p>
+                <h1 className="font-bold text-xl tracking-tight text-slate-800 leading-tight">Mobiking B2B</h1>
               </div>
             </div>
           </Link>
@@ -201,13 +202,13 @@ export default function Header() {
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon" aria-label="Account" className="h-8 w-8 border-slate-200 shadow-none rounded-lg">
-                    <User size={18} />
+                  <Button variant="ghost" aria-label="Account" className="h-9 w-9 p-0 bg-slate-100 hover:bg-slate-200 border-0 rounded-full flex items-center justify-center">
+                    <User size={18} className="text-slate-700" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 p-2 rounded-xl border border-slate-200 shadow-none">
+                <DropdownMenuContent align="end" className="w-56 p-2 rounded-sm border border-slate-250 shadow-none">
                   {accountMenuItems.map((item, i) => item.auth && !isAuthenticated ? null : item.type === "separator" ? <DropdownMenuSeparator key={i} className="bg-slate-100" /> : (
-                    <DropdownMenuItem key={item.label} onClick={item.onClick ? actionHandlers[item.onClick] : undefined} asChild={!!item.href} className="font-semibold rounded-lg text-xs py-2">
+                    <DropdownMenuItem key={item.label} onClick={item.onClick ? actionHandlers[item.onClick] : undefined} asChild={!!item.href} className="font-semibold rounded-sm text-xs py-2">
                       {item.href ? <Link href={item.href} className="flex items-center gap-2 w-full"><item.icon size={14} /><span>{item.label}</span></Link> : <div className="flex items-center gap-2 w-full"><item.icon size={14} /><span>{item.label}</span></div>}
                     </DropdownMenuItem>
                   ))}
@@ -215,8 +216,8 @@ export default function Header() {
               </DropdownMenu>
             ) : (
               <Link href="/login" aria-label="Login">
-                <Button className="h-8 w-8 p-0 shadow-none rounded-lg bg-primary text-white">
-                  <User size={18} />
+                <Button variant="ghost" className="h-9 w-9 p-0 bg-slate-100 hover:bg-slate-200 border-0 rounded-full flex items-center justify-center">
+                  <User size={18} className="text-slate-700" />
                 </Button>
               </Link>
             )}
@@ -225,27 +226,40 @@ export default function Header() {
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 w-full bg-white border-t border-slate-200 shadow-none md:hidden z-[50]">
-        <div className="flex justify-around items-center h-16">
-          {visibleMobileNavItems.map(item => (
-            item.href ? (
-              <Link key={item.label} href={item.href} className="flex-1 text-center py-2">
-                <div className="relative flex flex-col items-center gap-1 text-gray-500 hover:text-primary">
-                  <item.icon size={20} />
-                  <span className="text-[10px] font-bold">{item.label}</span>
-                  {item.notification && getNotificationCount(item.notification) > 0 && <span className="absolute top-0 right-3 bg-primary text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">{getNotificationCount(item.notification)}</span>}
+      <nav className="fixed bottom-4 left-4 right-4 bg-white/90 backdrop-blur-md border border-slate-200/80 shadow-md rounded-full md:hidden z-[50] max-w-[500px] mx-auto overflow-hidden">
+        <div className="flex justify-around items-center h-14 px-2">
+          {visibleMobileNavItems.map(item => {
+            const isActive = item.href ? pathname === item.href : false;
+            return item.href ? (
+              <Link key={item.label} href={item.href} className="flex-1 text-center py-1">
+                <div className={clsx(
+                  "relative flex flex-col items-center gap-0.5 transition-all duration-200",
+                  isActive ? "text-slate-900 scale-105" : "text-slate-500 hover:text-slate-800"
+                )}>
+                  <item.icon size={18} />
+                  <span className="text-[9px] font-bold tracking-tight">{item.label}</span>
+                  {item.notification && getNotificationCount(item.notification) > 0 && (
+                    <span className="absolute -top-1 right-4 bg-[#ED1C24] text-white text-[8px] font-black rounded-full w-3.5 h-3.5 flex items-center justify-center">
+                      {getNotificationCount(item.notification)}
+                    </span>
+                  )}
+                  {isActive && <span className="absolute -bottom-1.5 w-1 h-1 rounded-full bg-slate-900" />}
                 </div>
               </Link>
             ) : (
-              <button key={item.label} onClick={actionHandlers[item.onClick]} className="flex-1 text-center py-2 bg-transparent border-0 focus:outline-none">
-                <div className="relative flex flex-col items-center gap-1 text-gray-500 hover:text-primary">
-                  <item.icon size={20} />
-                  <span className="text-[10px] font-bold">{item.label}</span>
-                  {item.notification && getNotificationCount(item.notification) > 0 && <span className="absolute top-0 right-3 bg-primary text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">{getNotificationCount(item.notification)}</span>}
+              <button key={item.label} onClick={actionHandlers[item.onClick]} className="flex-1 text-center py-1 bg-transparent border-0 focus:outline-none">
+                <div className="relative flex flex-col items-center gap-0.5 text-slate-500 hover:text-slate-800 transition-all duration-200">
+                  <item.icon size={18} />
+                  <span className="text-[9px] font-bold tracking-tight">{item.label}</span>
+                  {item.notification && getNotificationCount(item.notification) > 0 && (
+                    <span className="absolute -top-1 right-4 bg-[#ED1C24] text-white text-[8px] font-black rounded-full w-3.5 h-3.5 flex items-center justify-center">
+                      {getNotificationCount(item.notification)}
+                    </span>
+                  )}
                 </div>
               </button>
-            )
-          ))}
+            );
+          })}
         </div>
       </nav>
 

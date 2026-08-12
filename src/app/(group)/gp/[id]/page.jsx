@@ -121,7 +121,7 @@ export default function GroupPage() {
     if (loading) {
         return (
             <div className="w-full pb-16 pt-4 bg-slate-50">
-                <div className="w-full lg:max-w-[90%] mx-auto px-4">
+                <div className="w-full px-4">
                     {/* Banner Skeleton */}
                     <div className="hidden min-[501px]:block w-full aspect-[16/3] bg-slate-200 animate-pulse rounded-sm mb-6" />
                     <div className="block min-[501px]:hidden w-full aspect-[2/1] bg-slate-200 animate-pulse rounded-sm mb-6" />
@@ -169,15 +169,14 @@ export default function GroupPage() {
 
     return (
         <section
-            className={`transition-all duration-300 pb-16 ${
-                isWebBgColorVisible ? "pt-3 sm:pt-6" : "pt-3 sm:pt-6"
-            }`}
+            className={`transition-all duration-300 pb-16 ${isWebBgColorVisible ? "pt-3 sm:pt-6" : "pt-3 sm:pt-6"
+                }`}
             style={{
                 backgroundColor: isWebBgColorVisible ? bgColor : "transparent",
             }}
         >
-            <div className="w-full lg:max-w-[90%] lg:mx-auto px-4">
-                
+            <div className="w-full px-4">
+
                 {/* Banner Section */}
                 {isWebBannerVisible && webBanner ? (
                     <div className="relative mb-6 overflow-hidden">
@@ -223,9 +222,8 @@ export default function GroupPage() {
                 {/* Title */}
                 <div className="flex justify-between items-center mb-6 pt-2">
                     <h1
-                        className={`text-2xl sm:text-3xl font-bold uppercase tracking-tight ${
-                            isWebBgColorVisible ? textColor : "text-gray-950"
-                        }`}
+                        className={`text-2xl sm:text-3xl font-bold uppercase tracking-tight ${isWebBgColorVisible ? textColor : "text-gray-950"
+                            }`}
                     >
                         {name}
                     </h1>
@@ -256,9 +254,8 @@ export default function GroupPage() {
                 {/* End text */}
                 {!pagination.hasMore && !loadingMore && (
                     <div
-                        className={`text-center pt-10 pb-4 text-xs sm:text-sm font-medium ${
-                            textColor === "text-white" ? "text-gray-200" : "text-gray-400"
-                        }`}
+                        className={`text-center pt-10 pb-4 text-xs sm:text-sm font-medium ${textColor === "text-white" ? "text-gray-200" : "text-gray-400"
+                            }`}
                     >
                         Thanks for shopping with Mobiking Wholesale.
                     </div>

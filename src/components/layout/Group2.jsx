@@ -112,7 +112,7 @@ export default function Group2() {
       <div className="w-full flex flex-col gap-6 lg:mx-auto">
         {Array.from({ length: 2 }).map((_, idx) => (
           <div key={idx} className="w-full pb-4 overflow-hidden">
-            <div className="w-full lg:max-w-[90%] lg:mx-auto space-y-4">
+            <div className="w-full space-y-4">
               {/* Header row skeleton */}
               <div className="flex justify-between items-center px-4 pt-3">
                 <div className="h-7 w-48 bg-slate-200 dark:bg-slate-800 animate-pulse rounded" />
@@ -207,7 +207,7 @@ export default function Group2() {
             className={`w-full overflow-hidden transition-all duration-300 ${group.isWebBgColorVisible ? 'pb-8 mb-4 sm:pb-9 pt-3 sm:pt-8' : 'pb-10'} ${isLast ? 'group-last' : ''}`}
             style={{ backgroundColor: group.isWebBgColorVisible ? bgColor : 'transparent' }}
           >
-            <div className="w-full lg:max-w-[90%] lg:mx-auto">
+            <div className="w-full">
               {/* ✅ Banner Section */}
               {group.isWebBannerVisible && group.webBanner ? (
                 <div className="relative overflow-hidden px-2 sm:px-4 py-5">
