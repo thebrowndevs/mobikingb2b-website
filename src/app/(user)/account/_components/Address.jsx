@@ -114,15 +114,15 @@ export default function AddressPage() {
       <div className="flex justify-start items-center">
         <Button onClick={handleAddClick} className="gap-2">
           <Plus size={16} strokeWidth={2} />
-          <span>Add New Warehouse</span>
+          <span>Add New Shipping Address</span>
         </Button>
       </div>
       <Separator />
       {addresses.length === 0 ? (
         <div className="text-center py-10 border-2 border-dashed rounded-lg">
-          <h3 className="text-lg font-semibold">No warehouses found</h3>
+          <h3 className="text-lg font-semibold">No shipping addresses found</h3>
           <p className="mt-1 text-muted-foreground">
-            Add a new warehouse to get started.
+            Add a new shipping address to get started.
           </p>
         </div>
       ) : (
@@ -195,7 +195,7 @@ export default function AddressPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete this warehouse. This action cannot be
+              This will permanently delete this shipping address. This action cannot be
               undone.
             </AlertDialogDescription>
           </AlertDialogHeader>

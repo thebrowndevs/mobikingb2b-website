@@ -48,6 +48,7 @@ export default function PhoneOtpForm({ type = "login" }) {
       };
 
       const res = await sendOtp(data);
+      console.log(res);
       if (res) {
         setOtpSent(true);
         setResendTimer(30);

@@ -22,7 +22,7 @@ function AccountContent() {
     { name: "My Profile", value: "profile", Component: <Profile />, icon: User },
     { name: "Business Profile", value: "business", Component: <BusinessProfile />, icon: Building2 },
     { name: "My Cart", value: "cart", Component: <Cart />, icon: ShoppingCart },
-    { name: "My Warehouses", value: "address", Component: <Address />, icon: MapPin },
+    { name: "Shipping Addresses", value: "address", Component: <Address />, icon: MapPin },
     { name: "Order Requests", value: "quotations", Component: <Quotations />, icon: FileText },
     { name: "My Orders", value: "orders", Component: <Orders />, icon: ShoppingBag },
     { name: "My Wishlist", value: "wishlist", Component: <Wishlist />, icon: Heart },
@@ -70,7 +70,7 @@ function AccountContent() {
 
   return (
     <div className="w-full lg:max-w-[90%] mx-auto px-4 md:px-6 py-10">
-      
+
       {/* ---------------------------------------------------- */}
       {/* MOBILE ACCOUNT VIEW LAYOUT (Step-by-Step Menu List)  */}
       {/* ---------------------------------------------------- */}
