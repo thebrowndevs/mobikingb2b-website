@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Phone, User, Mail } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,13 +29,25 @@ export default function Profile() {
     register,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm({
     defaultValues: {
       name: user?.name || "",
       email: user?.email || "",
-      phone: user?.phoneNo || "",
+      phone: user?.phoneNo || user?.mobile || user?.phone || "",
     },
   });
+
+  // Reset/sync form values when user object updates
+  useEffect(() => {
+    if (user) {
+      reset({
+        name: user.name || "",
+        email: user.email || "",
+        phone: user.phoneNo || user.mobile || user.phone || "",
+      });
+    }
+  }, [user, reset]);
 
   const onSubmit = async (data) => {
     setLoading(true);
@@ -169,7 +181,7 @@ export default function Profile() {
           </div>
 
           <div className="pt-2">
-            <Button type="submit" disabled={loading} className="w-full">
+            <Button type="submit" disabled={loading} className="w-full sm:w-auto px-8">
               {loading ? "Saving..." : "Save Changes"}
             </Button>
           </div>

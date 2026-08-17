@@ -208,9 +208,9 @@ function AccountContent() {
             <h4 className="font-bold text-slate-800 text-lg tracking-tight leading-tight">
               {user?.name || "B2B Member"}
             </h4>
-            <p className="text-sm text-slate-400 mt-1 font-semibold">
+            {/* <p className="text-sm text-slate-400 mt-1 font-semibold">
               +91 {user?.phoneNo}
-            </p>
+            </p> */}
 
             {/* Status Badges */}
             <div className="mt-3.5">

@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { raiseQuery } from "@/lib/services/operations/QueryApi";
 import { useAuth } from "@/context/AuthContext";
 
-const RaiseQueryButton = ({ refreshOrder, closeSheet, isOpen, setIsOpen, orderId }) => {
+const RaiseQueryButton = ({ refreshOrder, closeSheet, isOpen, setIsOpen, orderId, className = "w-full" }) => {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [submitting, setSubmitting] = useState(false);
@@ -56,7 +56,7 @@ const RaiseQueryButton = ({ refreshOrder, closeSheet, isOpen, setIsOpen, orderId
         <>
             <Button
                 variant="destructive"
-                className="w-full"
+                className={className}
                 onClick={() => {
                     if (!accessToken) setLoginOpen(true);
                     else setIsOpen(true);

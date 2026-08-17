@@ -83,7 +83,7 @@ export default function Group2() {
             fetchGroups((paginationRef.current.page || 1) + 1, false);
           }
         },
-        { threshold: 0.5, root: null }
+        { threshold: 0.05, root: null }
       );
     }
 

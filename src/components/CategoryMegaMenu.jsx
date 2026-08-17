@@ -14,7 +14,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
-export default function CategoryMegaMenu() {
+export default function CategoryMegaMenu({ customTrigger }) {
   const { loginOpen } = useAuth();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -70,7 +70,7 @@ export default function CategoryMegaMenu() {
 
   if (loading || categories.length === 0) return null;
 
-  const triggerButton = (
+  const triggerButton = customTrigger || (
     <button
       className={`flex items-center gap-1.5 text-lg text-primary tracking-tight transition-all focus:outline-none bg-transparent border-0 cursor-pointer font-medium ${isOpen
         ? "text-primary/80"

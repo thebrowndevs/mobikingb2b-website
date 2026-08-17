@@ -197,8 +197,16 @@ export const AuthProvider = ({ children }) => {
     try {
       const freshUser = await fetchProfileApi(accessToken);
       if (freshUser) {
-        setUser(freshUser);
-        localStorage.setItem("user", JSON.stringify(freshUser));
+        setUser((prevUser) => {
+          const mergedUser = {
+            ...prevUser,
+            ...freshUser,
+            phoneNo: freshUser.phoneNo || freshUser.mobile || freshUser.phone || prevUser?.phoneNo || prevUser?.mobile || prevUser?.phone || "",
+            email: freshUser.email || prevUser?.email || "",
+          };
+          localStorage.setItem("user", JSON.stringify(mergedUser));
+          return mergedUser;
+        });
 
         // Sync onboarding status step as well
         const status = await getOnboardingStatusApi(accessToken);

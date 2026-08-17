@@ -9,7 +9,9 @@ import {
   ShoppingCart,
   User,
   ChevronDown,
-  LayoutGrid
+  LayoutGrid,
+  Menu,
+  Search
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -55,6 +57,7 @@ export default function Header() {
   const pathname = usePathname();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const { isAuthenticated, logout, user, loginOpen, setLoginOpen } = useAuth();
 
   const actionHandlers = {
@@ -179,30 +182,43 @@ export default function Header() {
       </header>
 
       {/* Mobile Logo Row */}
-      <div className="md:hidden bg-white border-b border-slate-150 shadow-none py-2">
+      <div className="md:hidden bg-white border-b border-slate-150 shadow-none py-2.5 sticky top-0 z-40">
         <div className="flex items-center justify-between px-4">
-          <Link href="/" className="flex-shrink-0">
-            <div className="flex items-center gap-2">
+          {/* Left: Burger Drawer Trigger & Logo */}
+          <div className="flex items-center gap-3">
+            <CategoryMegaMenu
+              customTrigger={
+                <button aria-label="Menu" className="p-1 hover:bg-slate-100 rounded-lg focus:outline-none transition bg-transparent border-0 cursor-pointer flex items-center justify-center">
+                  <Menu size={22} className="text-slate-800" />
+                </button>
+              }
+            />
+            <Link href="/" className="flex-shrink-0 flex items-center gap-1.5">
               <img
                 src="/miniLogo.png"
                 alt="Mobiking B2B"
-                className="h-8 w-8 object-contain"
+                className="h-8 object-contain"
               />
-              <div>
-                <h1 className="font-bold text-xl tracking-tight text-slate-800 leading-tight">Mobiking B2B</h1>
-              </div>
-            </div>
-          </Link>
+              <span className="font-bold text-xl tracking-tighter text-slate-800">Mobiking B2B</span>
+            </Link>
+          </div>
 
-          <div className="flex items-center gap-2">
-            <div className="md:hidden flex items-center">
-              <CategoryMegaMenu />
-            </div>
+          {/* Right Controls: Search, Profile, Cart */}
+          <div className="flex items-center gap-2.5">
+            {/* Search Toggle Icon */}
+            <button
+              onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
+              className="h-9 w-9 p-0 bg-slate-100 hover:bg-slate-200 border-0 rounded-full flex items-center justify-center cursor-pointer transition focus:outline-none"
+              aria-label="Search"
+            >
+              <Search size={18} className="text-slate-700" />
+            </button>
 
+            {/* Profile Icon */}
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" aria-label="Account" className="h-9 w-9 p-0 bg-slate-100 hover:bg-slate-200 border-0 rounded-full flex items-center justify-center">
+                  <Button variant="ghost" aria-label="Account" className="h-9 w-9 p-0 bg-slate-100 hover:bg-slate-200 border-0 rounded-full flex items-center justify-center focus:outline-none shadow-none">
                     <User size={18} className="text-slate-700" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -216,13 +232,46 @@ export default function Header() {
               </DropdownMenu>
             ) : (
               <Link href="/login" aria-label="Login">
-                <Button variant="ghost" className="h-9 w-9 p-0 bg-slate-100 hover:bg-slate-200 border-0 rounded-full flex items-center justify-center">
+                <Button variant="ghost" className="h-9 w-9 p-0 bg-slate-100 hover:bg-slate-200 border-0 rounded-full flex items-center justify-center shadow-none">
                   <User size={18} className="text-slate-700" />
+                </Button>
+              </Link>
+            )}
+
+            {/* Cart Icon (with Auth / Login check) */}
+            {isAuthenticated ? (
+              <button
+                onClick={() => setIsCartOpen(true)}
+                className="relative h-9 w-9 p-0 bg-slate-100 hover:bg-slate-200 border-0 rounded-full flex items-center justify-center cursor-pointer transition focus:outline-none"
+                aria-label="Cart"
+              >
+                <ShoppingCart size={18} className="text-slate-700" />
+                {getNotificationCount("cart") > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-[#ED1C24] text-white text-[8px] rounded-full w-4 h-4 flex items-center justify-center font-bold">
+                    {getNotificationCount("cart")}
+                  </span>
+                )}
+              </button>
+            ) : (
+              <Link href="/login" aria-label="Login to see Cart">
+                <Button variant="ghost" className="relative h-9 w-9 p-0 bg-slate-100 hover:bg-slate-200 border-0 rounded-full flex items-center justify-center shadow-none">
+                  <ShoppingCart size={18} className="text-slate-700" />
                 </Button>
               </Link>
             )}
           </div>
         </div>
+
+        {/* Collapsible Mobile Search Row */}
+        {isMobileSearchOpen && (
+          <div className="px-4 pb-2 pt-1 border-t border-slate-100 flex justify-center bg-white transition-all">
+            <Suspense fallback={<div className="h-9 w-full bg-slate-50 border border-slate-200 rounded-full animate-pulse" />}>
+              <div className="w-full max-w-full">
+                <SearchBar />
+              </div>
+            </Suspense>
+          </div>
+        )}
       </div>
 
       {/* Mobile Bottom Navigation */}

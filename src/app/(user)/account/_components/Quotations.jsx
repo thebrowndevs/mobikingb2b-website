@@ -67,11 +67,11 @@ export default function Quotations() {
 
   if (quotations.length === 0) {
     return (
-      <Card className="bg-[#0D0F12] border-slate-800 text-slate-400">
+      <Card className="bg-white border-slate-200 text-slate-500">
         <CardContent className="flex flex-col items-center justify-center p-12 space-y-4">
-          <FileText size={48} className="text-slate-600" />
+          <FileText size={48} className="text-slate-350" />
           <p className="text-sm font-semibold">No order requests raised yet.</p>
-          <p className="text-xs text-slate-500 text-center max-w-sm">
+          <p className="text-xs text-slate-400 text-center max-w-sm">
             Add wholesale items to your cart and submit a request to get verified order requests from Mobiking.
           </p>
         </CardContent>
@@ -82,73 +82,83 @@ export default function Quotations() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-lg font-bold text-white tracking-wide">Order Requests</h2>
-        <span className="text-xs text-slate-400 font-medium">Total: {quotations.length}</span>
+        <h2 className="text-lg font-bold text-slate-800 tracking-wide">Order Requests</h2>
+        <span className="text-xs text-slate-500 font-medium">Total: {quotations.length}</span>
       </div>
 
       <div className="grid gap-4">
         {quotations.map((quote) => (
-          <Card key={quote._id} className="bg-[#0D0F12] border-slate-800 text-slate-300 hover:border-slate-700 transition-colors">
+          <Card key={quote._id} className="bg-white border-slate-200 text-slate-650 hover:border-slate-300 transition-colors">
             <CardHeader className="p-4 pb-2">
               <div className="flex flex-wrap justify-between items-center gap-2">
                 <div className="flex items-center gap-3">
-                  <span className="font-bold text-sm text-white tracking-wide">{quote.quotationId}</span>
+                  <span className="font-bold text-base text-slate-800 tracking-wide">{quote.quotationId}</span>
                   {getStatusBadge(quote.status)}
                 </div>
-                <div className="flex items-center gap-2 text-xs text-slate-500">
+                <div className="flex items-center gap-2 text-sm text-slate-400">
                   <CalendarDays size={14} />
                   <span>{new Date(quote.createdAt).toLocaleDateString("en-IN", { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="p-4 pt-2 space-y-4">
-              <div className="text-xs text-slate-400 space-y-1">
-                <div className="flex justify-between">
-                  <span>Warehouse Destination:</span>
-                  <span className="text-slate-300 font-medium">{quote.city}, {quote.state} - {quote.pincode}</span>
-                </div>
-                {quote.comments && (
-                  <div className="flex flex-col gap-0.5 mt-2 bg-slate-900/40 p-2 rounded border border-slate-800">
-                    <span className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">Comment/Requirement:</span>
-                    <span className="text-slate-300 text-xs italic">"{quote.comments}"</span>
-                  </div>
-                )}
-              </div>
-
-              <Separator className="bg-slate-800" />
-
-              <div className="space-y-3">
-                {quote.items.map((item, idx) => (
-                  <div key={idx} className="flex justify-between items-center gap-4 text-xs">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-8 h-8 rounded bg-slate-900 border border-slate-800 flex items-center justify-center overflow-hidden shrink-0">
-                        {item.productId?.images?.[0] ? (
-                          <img src={item.productId.images[0]} alt={item.fullName} className="object-cover w-full h-full" />
-                        ) : (
-                          <FileText size={16} className="text-slate-600" />
-                        )}
+            <CardContent className="p-4 pt-2">
+              <div className="flex flex-col md:flex-row gap-6">
+                
+                {/* Left Side: Order details */}
+                <div className="flex-1 space-y-4">
+                  <div className="text-sm text-slate-500 space-y-1.5">
+                    <div className="flex justify-between">
+                      <span>Warehouse Destination:</span>
+                      <span className="text-slate-800 font-semibold">{quote.city}, {quote.state} - {quote.pincode}</span>
+                    </div>
+                    {quote.comments && (
+                      <div className="flex flex-col gap-1 mt-2 bg-slate-50 p-2.5 rounded border border-slate-100">
+                        <span className="text-slate-400 text-xs uppercase font-bold tracking-wider">Comment/Requirement:</span>
+                        <span className="text-slate-700 text-sm italic">"{quote.comments}"</span>
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-slate-200 font-semibold truncate max-w-[200px] md:max-w-[400px]">{item.fullName}</p>
-                        <p className="text-[10px] text-slate-500">Variant: {item.variantName}</p>
+                    )}
+                  </div>
+
+                  <Separator className="bg-slate-100" />
+
+                  <div className="flex justify-between items-center pt-1">
+                    <div>
+                      <span className="text-xs text-slate-400 uppercase tracking-wider block">Estimated Total</span>
+                      <span className="text-lg font-bold text-slate-900">₹{quote.orderAmount}</span>
+                    </div>
+                    <span className="text-xs text-slate-400 italic text-right max-w-[180px]">Admin will verify final pricing & shipping charges</span>
+                  </div>
+                </div>
+
+                {/* Vertical Divider on Desktop, horizontal on mobile */}
+                <div className="hidden md:block w-px bg-slate-100 self-stretch shrink-0" />
+                <Separator className="md:hidden bg-slate-100" />
+
+                {/* Right Side: Products list */}
+                <div className="flex-1 space-y-3">
+                  {quote.items.map((item, idx) => (
+                    <div key={idx} className="flex justify-between items-center gap-4 text-sm">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded bg-slate-50 border border-slate-150 flex items-center justify-center overflow-hidden shrink-0">
+                          {item.productId?.images?.[0] ? (
+                            <img src={item.productId.images[0]} alt={item.productId?.fullName || item.productId?.name || item.fullName} className="object-cover w-full h-full" />
+                          ) : (
+                            <FileText size={18} className="text-slate-400" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-slate-800 font-semibold leading-snug">{item.productId?.fullName || item.productId?.name || item.fullName}</p>
+                          <p className="text-xs text-slate-400 mt-0.5">Variant: {item.variantName}</p>
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-slate-700 font-medium">₹{item.price} × {item.quantity}</p>
+                        <p className="text-xs text-slate-400">Total: ₹{(item.price * item.quantity).toFixed(2)}</p>
                       </div>
                     </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-slate-300 font-medium">₹{item.price} × {item.quantity}</p>
-                      <p className="text-[10px] text-slate-500">Total: ₹{item.price * item.quantity}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <Separator className="bg-slate-800" />
-
-              <div className="flex justify-between items-center pt-1">
-                <div>
-                  <span className="text-[10px] text-slate-500 uppercase tracking-wider block">Estimated Total</span>
-                  <span className="text-base font-bold text-white">₹{quote.orderAmount}</span>
+                  ))}
                 </div>
-                <span className="text-[10px] text-slate-500 italic">Admin will verify final pricing & shipping charges</span>
+
               </div>
             </CardContent>
           </Card>

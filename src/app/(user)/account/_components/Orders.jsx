@@ -182,96 +182,144 @@ export default function Orders() {
           const modeText = order.method === "Online" ? "Online Payment" : "Cash on Delivery";
 
           return (
-            <Card key={order._id} className="p-0 overflow-hidden">
-              <CardHeader className="bg-muted/50 p-4">
-                <div className="flex flex-col gap-6">
-
-                  {/* Order Id and payment status */}
-                  <div className="flex justify-between items-start md:items-center gap-1">
-                    <div className="flex max-md:flex-col items-center gap-3">
-                      {/* Order Id */}
-                      <div className="flex items-center gap-1">
-                        <span className="text-sm text-muted-foreground">Order ID:</span>
-                        <span className="font-mono text-sm font-semibold">{order.orderId}</span>
-                      </div>
-
-                      {/* Order Date */}
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <CalendarDays className="h-4 w-4" />
-                        <span>
-                          {orderDate.toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          })}
-                        </span>
-                        <span>
-                          {orderDate.toLocaleTimeString("en-US", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            hour12: true,
-                          })}
-                        </span>
-                      </div>
+            <Card key={order._id} className="p-0 overflow-hidden bg-white border border-slate-200 rounded-sm">
+              
+              {/* Card Header: Order Metadata */}
+              <CardHeader className="bg-slate-50 border-b border-slate-100 p-4">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Order ID:</span>
+                      <span className="font-mono text-sm font-bold text-slate-800">{order.orderId}</span>
                     </div>
+                    <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
+                      <CalendarDays className="h-3.5 w-3.5" />
+                      <span>
+                        {orderDate.toLocaleDateString("en-IN", {
+                          day: 'numeric', month: 'short', year: 'numeric'
+                        })}
+                      </span>
+                      <span>at</span>
+                      <span>
+                        {orderDate.toLocaleTimeString("en-IN", {
+                          hour: "2-digit", minute: "2-digit", hour12: true
+                        })}
+                      </span>
+                    </div>
+                  </div>
 
-                    {/* Order Status */}
-                    <Badge
-                      variant={getStatusBadgeVariant(order.status)}
-                      className="px-3 py-1 text-sm"
-                    >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant={order.method === "Online" ? "default" : "secondary"} className="text-xs">
+                      {modeText}
+                    </Badge>
+                    <Badge variant={getStatusBadgeVariant(order.status)} className="px-2 py-0.5 text-xs font-semibold">
                       {order.status}
                     </Badge>
                   </div>
-
-                  {/* Order Status nd action buttons */}
-                  <div className="flex flex-wrap justify-between items-center gap-4">
-                    {/* Payment Method  */}
-                    <Badge
-                      variant={order.method === "Online" ? "default" : "secondary"}
-                      className=""
-                    >
-                      {modeText}
-                    </Badge>
-
-                    {/* Shipping Status */}
-                    <Badge
-                      variant={getStatusBadgeVariant(order.shippingStatus)}
-                      className="px-3 py-1 text-sm flex flex-wrap gap-1 justify-start"
-                    >
-                      <span>Shipping Status:</span> {order.shippingStatus}
-                    </Badge>
-
-                    {order.scans?.length > 0 && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-[130px]"
-                        onClick={() => {
-                          setSelectedOrder(order);
-                          setTrackDrawerOpen(true); // New state
-                        }}
-                      >
-                        Track Order
-                        <ChevronRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    )}
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-[130px]"
-                      onClick={() => {
-                        setSelectedOrder(order);
-                        setSheetOpen(true);
-                      }}
-                    >
-                      View Details
-                      <ChevronRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </div>
                 </div>
               </CardHeader>
+
+              {/* Card Content: Split Layout */}
+              <CardContent className="p-4">
+                <div className="flex flex-col md:flex-row gap-6">
+                  
+                  {/* Left Column: Shipping details and overall totals */}
+                  <div className="flex-1 space-y-3.5">
+                    <div className="space-y-1.5 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-slate-500 font-medium">Recipient:</span>
+                        <span className="text-slate-800 font-semibold text-right">{order.name}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500 font-medium">Shipping Address:</span>
+                        <span className="text-slate-700 font-medium text-right max-w-[200px] truncate" title={order.address}>{order.address}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500 font-medium">Shipping Status:</span>
+                        <span className="text-slate-800 font-semibold">{order.shippingStatus}</span>
+                      </div>
+                    </div>
+
+                    <Separator className="bg-slate-100" />
+
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-semibold">Total Paid</span>
+                        <span className="text-base font-bold text-slate-900">₹{order.orderAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        {order.scans?.length > 0 && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs font-semibold cursor-pointer"
+                            onClick={() => {
+                              setSelectedOrder(order);
+                              setTrackDrawerOpen(true);
+                            }}
+                          >
+                            Track Order
+                          </Button>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 text-xs font-semibold cursor-pointer"
+                          onClick={() => {
+                            setSelectedOrder(order);
+                            setSheetOpen(true);
+                          }}
+                        >
+                          View Details
+                          <ChevronRight className="ml-1 h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Vertical Divider on Desktop, horizontal on mobile */}
+                  <div className="hidden md:block w-px bg-slate-100 self-stretch shrink-0" />
+                  <Separator className="md:hidden bg-slate-100" />
+
+                  {/* Right Column: Ordered Items List preview (first 3 items with 'and X more') */}
+                  <div className="flex-1 space-y-3">
+                    <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-bold">Items Sourced</span>
+                    <div className="space-y-3">
+                      {order.items.slice(0, 3).map((it, idx) => (
+                        <div key={idx} className="flex justify-between items-center gap-4 text-xs">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-9 h-9 rounded bg-slate-50 border border-slate-150 flex items-center justify-center overflow-hidden shrink-0">
+                              <img
+                                src={it.productId?.images?.[0] || "/placeholder.png"}
+                                alt={it.productId?.fullName}
+                                className="object-contain w-full h-full p-0.5"
+                              />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-slate-800 font-semibold truncate max-w-[150px] sm:max-w-[200px] md:max-w-[250px]">{it.productId?.fullName || it.productId?.name || "Product"}</p>
+                              <p className="text-[10px] text-slate-400">Variant: <span className="capitalize">{it.variantName}</span> × {it.quantity}</p>
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="text-slate-800 font-semibold">₹{(it.price * it.quantity).toFixed(2)}</p>
+                          </div>
+                        </div>
+                      ))}
+                      {order.items.length > 3 && (
+                        <p className="text-[11px] text-indigo-650 font-bold mt-1 text-center cursor-pointer" onClick={() => {
+                          setSelectedOrder(order);
+                          setSheetOpen(true);
+                        }}>
+                          + {order.items.length - 3} more items in this order
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                </div>
+              </CardContent>
             </Card>
           );
         })}
@@ -740,7 +788,7 @@ function OrderDetailsSheet({ closeSheet, refreshOrder, isOpen, setIsOpen, order,
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="flex flex-col w-full max-w-md p-0">
+      <SheetContent side="right" className="flex flex-col w-full sm:max-w-xl md:max-w-2xl lg:max-w-[760px] p-0">
         <SheetHeader className="p-6 border-b">
           <SheetTitle className="flex flex-wrap items-center gap-2">
             Order ID: <span className="font-mono">{order.orderId}</span>
@@ -748,164 +796,140 @@ function OrderDetailsSheet({ closeSheet, refreshOrder, isOpen, setIsOpen, order,
           </SheetTitle>
         </SheetHeader>
 
-        {/* Amount Summary */}
-        <div className="flex-1 overflow-y-auto px-6 space-y-6">
-          <section>
-            {
-              order?.reason &&
-              <div className="flex gap-2 font-bold text-red-500 underline">
-                <span>Reason: </span>
-                <span>{order?.reason}</span>
-              </div>
-            }
-            <h4 className="font-semibold mb-2">Amount Summary</h4>
-            <div className="space-y-1 text-sm">
-              {/* Coupon Badge */}
-              {(order?.coupon?.code || order?.couponCode) && (
-                <div className="mb-2">
-                  <span className="inline-block bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded">
-                    Coupon Applied: {order?.coupon?.code || order?.couponCode}
-                    {/* {(order?.coupon?.type || order?.couponType) &&
-                      ` (${order?.coupon?.type || order?.couponType})`} */}
-                  </span>
+        {/* Details Wrapper */}
+        <div className="flex-1 overflow-y-auto px-6 py-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            
+            {/* Left Column: Summary and Shipping */}
+            <div className="space-y-6">
+              {order?.reason && (
+                <div className="flex gap-2 font-bold text-red-500 underline text-sm">
+                  <span>Reason: </span>
+                  <span>{order?.reason}</span>
                 </div>
               )}
-              <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span>₹{order?.subtotal.toLocaleString()}</span>
-              </div>
-              {/* {order?.discount > 0 && ( */}
-              <div className="flex justify-between text-green-600">
-                <p>Discount</p>
-                <p>- ₹{order?.discount?.toLocaleString()}</p>
-              </div>
-              {/* )} */}
-              <div className="flex justify-between">
-                <span>Delivery</span>
-                <span>₹{order?.deliveryCharge.toLocaleString()}</span>
-              </div>
-              <Separator />
-              <div className="flex justify-between font-bold">
-                <span>Total Paid</span>
-                <span>₹{order?.orderAmount.toLocaleString()}</span>
-              </div>
-            </div>
-          </section>
 
-          {/* Shipping */}
-          <section>
-            <h4 className="font-semibold mb-2">Shipping Details</h4>
-            <p className="text-sm"><strong>Name:</strong> {order.name}</p>
-            <p className="text-sm"><strong>Address:</strong> {order.address}</p>
-            <p className="text-sm"><strong>Phone:</strong> {order.phoneNo}</p>
-            <p className="text-sm"><strong>Shipping Status:</strong> {order.shippingStatus}</p>
-            {order.courierName && <p className="text-sm"><strong>Courier:</strong> {order.courierName}</p>}
-            {order.awbCode && <p className="text-sm"><strong>AWB Code:</strong> {order.awbCode}</p>}
-            {order.expectedDeliveryDate && (
-              <p className="text-sm"><strong>Expected Delivery:</strong> {order.expectedDeliveryDate}</p>
-            )}
-          </section>
+              {/* Amount Summary Section */}
+              <section className="bg-slate-50 p-4 rounded-sm border border-slate-100">
+                <h4 className="font-bold text-slate-850 text-sm mb-3">Amount Summary</h4>
+                <div className="space-y-2 text-xs text-slate-600">
+                  {(order?.coupon?.code || order?.couponCode) && (
+                    <div className="mb-2">
+                      <span className="inline-block bg-green-100 text-green-700 text-[10px] font-semibold px-2 py-0.5 rounded">
+                        Coupon Applied: {order?.coupon?.code || order?.couponCode}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span>Subtotal</span>
+                    <span className="font-medium text-slate-700">₹{order?.subtotal.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-green-600">
+                    <p>Discount</p>
+                    <p>- ₹{order?.discount?.toLocaleString()}</p>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Delivery</span>
+                    <span className="font-medium text-slate-700">₹{order?.deliveryCharge.toLocaleString()}</span>
+                  </div>
+                  <Separator className="my-1.5" />
+                  <div className="flex justify-between text-sm font-bold text-slate-850">
+                    <span>Total Paid</span>
+                    <span>₹{order?.orderAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                  </div>
+                </div>
+              </section>
 
-          {/* Return Shipment Details */}
-          {returnData?.isReturnInitiated && (
-            <section className="mt-6 border-t pt-4">
-              <h4 className="font-semibold mb-2 text-red-600">
-                Return Shipment Details
-              </h4>
+              {/* Shipping Details Section */}
+              <section className="bg-slate-50 p-4 rounded-sm border border-slate-100 space-y-2.5 text-xs text-slate-600">
+                <h4 className="font-bold text-slate-850 text-sm mb-1">Shipping Details</h4>
+                <p><strong>Name:</strong> <span className="text-slate-800 font-medium">{order.name}</span></p>
+                <p><strong>Address:</strong> <span className="text-slate-750 font-medium">{order.address}</span></p>
+                <p><strong>Phone:</strong> <span className="text-slate-800 font-medium">{order.phoneNo}</span></p>
+                <p><strong>Shipping Status:</strong> <span className="text-slate-800 font-semibold">{order.shippingStatus}</span></p>
+                {order.courierName && <p><strong>Courier:</strong> <span className="text-slate-800 font-medium">{order.courierName}</span></p>}
+                {order.awbCode && <p><strong>AWB Code:</strong> <span className="font-mono text-slate-800 font-semibold">{order.awbCode}</span></p>}
+                {order.expectedDeliveryDate && (
+                  <p><strong>Expected Delivery:</strong> <span className="text-slate-800 font-medium">{order.expectedDeliveryDate}</span></p>
+                )}
+              </section>
 
-              <p className="text-sm">
-                <strong>Return Order ID:</strong> {returnData.orderId}
-              </p>
-
-              <p className="text-sm">
-                <strong>Status:</strong> {returnData.shippingStatus || returnData.status}
-              </p>
-
-              <p className="text-sm">
-                <strong>Courier:</strong> {returnData.courier_name}
-              </p>
-
-              <p className="text-sm">
-                <strong>AWB Code:</strong> {returnData.awb_code}
-              </p>
-
-              <p className="text-sm">
-                <strong>Shipment ID:</strong> {returnData.shipment_id}
-              </p>
-
-              <p className="text-sm">
-                <strong>Pickup Scheduled:</strong>{" "}
-                {returnData.pickupScheduled ? "Yes" : "No"}
-              </p>
-
-              <p className="text-sm">
-                <strong>Pickup Date:</strong>{" "}
-                {returnData.pickup_scheduled_date || "—"}
-              </p>
-
-              <p className="text-sm">
-                <strong>Courier Assigned At:</strong>{" "}
-                {formatDateTime(returnData?.assigned_date_time?.date)}
-              </p>
-
-              {returnData.expectedDeliveryDate && (
-                <p className="text-sm">
-                  <strong>Expected Delivery:</strong>{" "}
-                  {formatDateTime(returnData.expectedDeliveryDate)}
-                </p>
+              {/* Return Shipment Details Section */}
+              {returnData?.isReturnInitiated && (
+                <section className="bg-red-50/50 p-4 rounded-sm border border-red-100 space-y-2.5 text-xs text-slate-650">
+                  <h4 className="font-bold text-red-700 text-sm mb-1">Return Shipment Details</h4>
+                  <p><strong>Return Order ID:</strong> <span className="font-mono text-slate-800 font-medium">{returnData.orderId}</span></p>
+                  <p><strong>Status:</strong> <span className="text-slate-800 font-semibold">{returnData.shippingStatus || returnData.status}</span></p>
+                  <p><strong>Courier:</strong> <span className="text-slate-800 font-medium">{returnData.courier_name}</span></p>
+                  <p><strong>AWB Code:</strong> <span className="font-mono text-slate-800 font-semibold">{returnData.awb_code}</span></p>
+                  <p><strong>Shipment ID:</strong> <span className="text-slate-800 font-medium">{returnData.shipment_id}</span></p>
+                  <p><strong>Pickup Scheduled:</strong> <span className="text-slate-800 font-medium">{returnData.pickupScheduled ? "Yes" : "No"}</span></p>
+                  <p><strong>Pickup Date:</strong> <span className="text-slate-800 font-medium">{returnData.pickup_scheduled_date || "—"}</span></p>
+                  <p><strong>Courier Assigned At:</strong> <span className="text-slate-800 font-medium">{formatDateTime(returnData?.assigned_date_time?.date)}</span></p>
+                  {returnData.expectedDeliveryDate && (
+                    <p><strong>Expected Delivery:</strong> <span className="text-slate-800 font-medium">{formatDateTime(returnData.expectedDeliveryDate)}</span></p>
+                  )}
+                </section>
               )}
-            </section>
-          )}
+            </div>
 
-          {/* Items */}
-          <section>
-            <h4 className="font-semibold mb-2">Items</h4>
-            <ul className="space-y-4">
-              {order.items.map((it, idx) => (
-                <li key={idx} className="flex items-start gap-4">
-                  <img
-                    src={it.productId?.images?.[0] || "/placeholder.png"}
-                    alt={it.productId?.fullName}
-                    className="h-16 w-16 rounded-md border p-1 object-contain bg-white"
-                  />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium">{it.productId?.fullName}</p>
-                      {it.returnStatus && (
-                        <Badge variant="outline" className="text-[10px] bg-amber-50 text-amber-700 border-amber-200">
-                          {it.returnStatus}
-                        </Badge>
+            {/* Right Column: Items List */}
+            <section className="space-y-4">
+              <h4 className="font-bold text-slate-850 text-sm border-b pb-2">Items Sourced</h4>
+              <ul className="space-y-4 max-h-[500px] overflow-y-auto pr-1">
+                {order.items.map((it, idx) => (
+                  <li key={idx} className="flex items-start gap-4 text-xs">
+                    <img
+                      src={it.productId?.images?.[0] || "/placeholder.png"}
+                      alt={it.productId?.fullName}
+                      className="h-16 w-16 rounded-sm border p-1 object-contain bg-white shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-semibold text-slate-800 text-sm leading-snug">{it.productId?.fullName || it.productId?.name || "Product Name"}</p>
+                        {it.returnStatus && (
+                          <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-amber-50 text-amber-700 border-amber-200">
+                            {it.returnStatus}
+                          </Badge>
+                        )}
+                      </div>
+                      {it.variantName && (
+                        <p className="text-slate-500 mt-1">
+                          Variant: <span className="capitalize text-slate-700 font-medium">{it.variantName}</span>
+                        </p>
+                      )}
+                      <p className="text-slate-500 mt-0.5">Qty: <span className="text-slate-800 font-medium">{it.quantity}</span></p>
+                      {it.returnQuantity > 0 && (
+                        <p className="text-xs text-amber-600 font-semibold mt-0.5">
+                          Returned Qty: {it.returnQuantity}
+                        </p>
                       )}
                     </div>
-                    {it.variantName && (
-                      <p className="text-xs text-muted-foreground">
-                        Variant: <span className="capitalize">{it.variantName}</span>
+                    <div className="text-right shrink-0">
+                      <p className="font-bold text-slate-800 text-sm">
+                        ₹{(it.price * it.quantity).toFixed(2)}
                       </p>
-                    )}
-                    <p className="text-xs text-muted-foreground">Qty: {it.quantity}</p>
-                    {it.returnQuantity > 0 && (
-                      <p className="text-xs text-amber-600 font-semibold mt-0.5">
-                        Returned Qty: {it.returnQuantity}
+                      <p className="text-[10px] text-slate-400">
+                        ₹{it.price.toFixed(2)} each
                       </p>
-                    )}
-                  </div>
-                  <p className="font-medium">
-                    ₹{(it.price * it.quantity).toLocaleString()}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </section>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+          </div>
         </div>
 
         {/* FOOTER – action buttons & statuses */}
-        <div className="border-t p-6 space-y-4">
+        {/* FOOTER – action buttons & statuses */}
+        <div className="border-t p-6 flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:justify-end items-stretch sm:items-center bg-slate-50">
 
           {/* — Rate Order */}
           {
             canWarranty && (
               <Button
-                className="w-full bg-green-600 hover:bg-green-700 text-white"
+                className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white"
                 onClick={() => onOpenRatingModal()}
               >
                 Rate Now
@@ -919,6 +943,7 @@ function OrderDetailsSheet({ closeSheet, refreshOrder, isOpen, setIsOpen, order,
               orderId={order?._id}
               refreshOrder={refreshOrder}
               closeSheet={closeSheet}
+              className="w-full sm:w-auto"
             />
           )}
 
@@ -963,7 +988,7 @@ function OrderDetailsSheet({ closeSheet, refreshOrder, isOpen, setIsOpen, order,
             canCancel && (
               <Button
                 variant="destructive"
-                className="w-full"
+                className="w-full sm:w-auto"
                 onClick={() => onOpenRequestModal("Cancel")}
               >
                 Cancel Order
@@ -1003,7 +1028,7 @@ function OrderDetailsSheet({ closeSheet, refreshOrder, isOpen, setIsOpen, order,
           ) : (
             canReturn && (
               <Button
-                className="w-full"
+                className="w-full sm:w-auto"
                 onClick={() => onOpenRequestModal("Return")}
               >
                 Request Return
@@ -1015,7 +1040,7 @@ function OrderDetailsSheet({ closeSheet, refreshOrder, isOpen, setIsOpen, order,
           {order?.partialReturnRequests?.length > 0 && (
             <Button
               variant="outline"
-              className="w-full border-blue-200 bg-blue-50/50 text-blue-800 hover:bg-blue-100/60"
+              className="w-full sm:w-auto border-blue-200 bg-blue-50/50 text-blue-800 hover:bg-blue-100/60"
               onClick={() => onOpenPartialReturnHistoryModal()}
             >
               View Return Requests
@@ -1026,7 +1051,7 @@ function OrderDetailsSheet({ closeSheet, refreshOrder, isOpen, setIsOpen, order,
           {canPartialReturn && (
             <Button
               variant="outline"
-              className="w-full border-amber-200 bg-amber-50/50 text-amber-800 hover:bg-amber-100/60"
+              className="w-full sm:w-auto border-amber-200 bg-amber-50/50 text-amber-800 hover:bg-amber-100/60"
               onClick={() => onOpenPartialReturnModal()}
             >
               Request Return
