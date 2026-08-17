@@ -152,78 +152,98 @@ export default function GroupPage() {
     // Support both website keys and legacy backend API keys
     const name = group.heading || group.name;
     const webBanner = group.webBanner || group.banner;
+    const appBanner = group.appBanner || group.banner;
     const bannerLink = group.bannerLink;
     const isWebBannerVisible = group.isWebBannerVisible !== undefined ? group.isWebBannerVisible : group.isBannerVisble;
+    const isAppBannerVisible = group.isAppBannerVisible !== undefined ? group.isAppBannerVisible : group.isBannerVisble;
     const isWebBgColorVisible = group.isWebBgColorVisible !== undefined ? group.isWebBgColorVisible : group.isBackgroundColorVisible;
+    const isAppBgColorVisible = group.isAppBgColorVisible !== undefined ? group.isAppBgColorVisible : group.isBackgroundColorVisible;
     const webBackgroundColor = group.webBackgroundColor || group.backgroundColor || "#ffffff";
+    const appBackgroundColor = group.appBackgroundColor || group.backgroundColor || "#ffffff";
     const isBannerLinkActive = group.isBannerLinkActive !== undefined ? group.isBannerLinkActive : true;
 
-    // Auto-detect text color based on background brightness
-    const bgColor = webBackgroundColor;
-    const rgb = parseInt(bgColor.substring(1), 16);
-    const r = (rgb >> 16) & 0xff;
-    const g = (rgb >> 8) & 0xff;
-    const b = rgb & 0xff;
-    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-    const textColor = brightness > 128 ? "text-gray-900" : "text-white";
+    // Web text color
+    const webBg = webBackgroundColor;
+    const webRgb = parseInt(webBg.substring(1), 16);
+    const webR = (webRgb >> 16) & 0xff;
+    const webG = (webRgb >> 8) & 0xff;
+    const webB = webRgb & 0xff;
+    const webBrightness = (webR * 299 + webG * 587 + webB * 114) / 1000;
+    const webTextColorClass = isWebBgColorVisible
+      ? (webBrightness > 128 ? "min-[501px]:text-gray-900" : "min-[501px]:text-white")
+      : "min-[501px]:text-gray-950";
+
+    // App text color
+    const appBg = appBackgroundColor;
+    const appRgb = parseInt(appBg.substring(1), 16);
+    const appR = (appRgb >> 16) & 0xff;
+    const appG = (appRgb >> 8) & 0xff;
+    const appB = appRgb & 0xff;
+    const appBrightness = (appR * 299 + appG * 587 + appB * 114) / 1000;
+    const appTextColorClass = isAppBgColorVisible
+      ? (appBrightness > 128 ? "text-gray-900" : "text-white")
+      : "text-gray-950";
 
     return (
         <section
-            className={`transition-all duration-300 pb-16 ${isWebBgColorVisible ? "pt-3 sm:pt-6" : "pt-3 sm:pt-6"
-                }`}
+            className="transition-all duration-300 pb-16 bg-[var(--app-bg-color)] min-[501px]:bg-[var(--web-bg-color)] pt-3 sm:pt-6"
             style={{
-                backgroundColor: isWebBgColorVisible ? bgColor : "transparent",
+                "--web-bg-color": isWebBgColorVisible ? webBg : "transparent",
+                "--app-bg-color": isAppBgColorVisible ? appBg : "transparent",
             }}
         >
             <div className="w-full px-4">
 
                 {/* Banner Section */}
-                {isWebBannerVisible && webBanner ? (
+                {(isWebBannerVisible && webBanner) || (isAppBannerVisible && appBanner) ? (
                     <div className="relative mb-6 overflow-hidden">
                         {/* Desktop layout: 16:3 aspect ratio */}
-                        <div className="hidden min-[501px]:block relative aspect-[16/3] w-full">
-                            {isBannerLinkActive && bannerLink ? (
-                                <a href={bannerLink} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                        {isWebBannerVisible && webBanner && (
+                            <div className="hidden min-[501px]:block relative aspect-[16/3] w-full">
+                                {isBannerLinkActive && bannerLink ? (
+                                    <a href={bannerLink} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                                        <img
+                                            src={webBanner}
+                                            alt={name}
+                                            className="absolute inset-0 w-full h-full object-cover rounded-sm"
+                                        />
+                                    </a>
+                                ) : (
                                     <img
                                         src={webBanner}
                                         alt={name}
                                         className="absolute inset-0 w-full h-full object-cover rounded-sm"
                                     />
-                                </a>
-                            ) : (
-                                <img
-                                    src={webBanner}
-                                    alt={name}
-                                    className="absolute inset-0 w-full h-full object-cover rounded-sm"
-                                />
-                            )}
-                        </div>
-                        {/* Mobile layout: 2:1 aspect ratio */}
-                        <div className="block min-[501px]:hidden relative aspect-[2/1] w-full">
-                            {isBannerLinkActive && bannerLink ? (
-                                <a href={bannerLink} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                                )}
+                            </div>
+                        )}
+                        {/* Mobile layout: 5:2 aspect ratio */}
+                        {isAppBannerVisible && appBanner && (
+                            <div className="block min-[501px]:hidden relative aspect-[5/2] w-full">
+                                {isBannerLinkActive && bannerLink ? (
+                                    <a href={bannerLink} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                                        <img
+                                            src={appBanner}
+                                            alt={name}
+                                            className="absolute inset-0 w-full h-full object-cover rounded-sm"
+                                        />
+                                    </a>
+                                ) : (
                                     <img
-                                        src={webBanner}
+                                        src={appBanner}
                                         alt={name}
                                         className="absolute inset-0 w-full h-full object-cover rounded-sm"
                                     />
-                                </a>
-                            ) : (
-                                <img
-                                    src={webBanner}
-                                    alt={name}
-                                    className="absolute inset-0 w-full h-full object-cover rounded-sm"
-                                />
-                            )}
-                        </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 ) : null}
 
                 {/* Title */}
                 <div className="flex justify-between items-center mb-6 pt-2">
                     <h1
-                        className={`text-2xl sm:text-3xl font-bold uppercase tracking-tight ${isWebBgColorVisible ? textColor : "text-gray-950"
-                            }`}
+                        className={`text-2xl sm:text-3xl font-bold uppercase tracking-tight ${appTextColorClass} ${webTextColorClass}`}
                     >
                         {name}
                     </h1>
@@ -254,8 +274,7 @@ export default function GroupPage() {
                 {/* End text */}
                 {!pagination.hasMore && !loadingMore && (
                     <div
-                        className={`text-center pt-10 pb-4 text-xs sm:text-sm font-medium ${textColor === "text-white" ? "text-gray-200" : "text-gray-400"
-                            }`}
+                        className={`text-center pt-10 pb-4 text-xs sm:text-sm font-medium ${appTextColorClass} ${webTextColorClass}`}
                     >
                         Thanks for shopping with Mobiking Wholesale.
                     </div>

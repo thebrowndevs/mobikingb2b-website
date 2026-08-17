@@ -162,13 +162,25 @@ export default function Group2() {
 
         if (!items.length) return null;
 
-        const bgColor = group?.webBackgroundColor || "#ffffff";
-        const rgb = parseInt(bgColor.replace("#", ""), 16);
-        const r = (rgb >> 16) & 0xff;
-        const g = (rgb >> 8) & 0xff;
-        const b = rgb & 0xff;
-        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-        const textColor = brightness > 128 ? "text-gray-900" : "text-white";
+        const webBg = group?.webBackgroundColor || "#ffffff";
+        const webRgb = parseInt(webBg.replace("#", ""), 16);
+        const webR = (webRgb >> 16) & 0xff;
+        const webG = (webRgb >> 8) & 0xff;
+        const webB = webRgb & 0xff;
+        const webBrightness = (webR * 299 + webG * 587 + webB * 114) / 1000;
+        const webTextColorClass = group.isWebBgColorVisible
+          ? (webBrightness > 128 ? "min-[501px]:text-gray-900" : "min-[501px]:text-white")
+          : "min-[501px]:text-gray-800";
+
+        const appBg = group?.appBackgroundColor || "#ffffff";
+        const appRgb = parseInt(appBg.replace("#", ""), 16);
+        const appR = (appRgb >> 16) & 0xff;
+        const appG = (appRgb >> 8) & 0xff;
+        const appB = appRgb & 0xff;
+        const appBrightness = (appR * 299 + appG * 587 + appB * 114) / 1000;
+        const appTextColorClass = group.isAppBgColorVisible
+          ? (appBrightness > 128 ? "text-gray-900" : "text-white")
+          : "text-gray-800";
 
         const isLast = idx === groups.length - 1;
         const isScroll = group.placement === 'scroll';
@@ -177,7 +189,7 @@ export default function Group2() {
         const renderItem = (item) => {
           if (group.groupType === 'subcategories') {
             return (
-              <Link href={`/cs/${item.slug}`} className="group flex flex-col items-center text-center w-full py-1">
+              <Link href={`/cs/${item.slug}`} className="group flex flex-col items-center text-center w-full py-1 ">
                 <div className="relative w-full aspect-square rounded-xl border border-slate-100 overflow-hidden bg-white shadow-sm transition transform group-hover:scale-105 group-hover:shadow-md">
                   <img src={item.photos?.[0] || '/not-found-img.webp'} alt={item.name} className="object-cover w-full h-full p-1.5 rounded-xl" />
                 </div>
@@ -204,60 +216,69 @@ export default function Group2() {
         return (
           <section
             key={String(group._id)}
-            className={`w-full overflow-hidden transition-all duration-300 ${group.isWebBgColorVisible ? 'pb-8 mb-4 sm:pb-9 pt-3 sm:pt-8' : 'pb-10'} ${isLast ? 'group-last' : ''}`}
-            style={{ backgroundColor: group.isWebBgColorVisible ? bgColor : 'transparent' }}
+            className={`w-full overflow-hidden transition-all duration-300 bg-[var(--app-bg-color)] min-[501px]:bg-[var(--web-bg-color)] ${isLast ? 'group-last' : ''
+              } ${group.isAppBgColorVisible ? 'pb-8 pt-3' : 'pb-10'} ${group.isWebBgColorVisible ? 'sm:pb-9 sm:pt-8' : ''
+              }`}
+            style={{
+              "--web-bg-color": group.isWebBgColorVisible ? webBg : "transparent",
+              "--app-bg-color": group.isAppBgColorVisible ? appBg : "transparent",
+            }}
           >
             <div className="w-full">
               {/* ✅ Banner Section */}
-              {group.isWebBannerVisible && group.webBanner ? (
-                <div className="relative overflow-hidden px-2 sm:px-4 py-5">
+              {(group.isWebBannerVisible && group.webBanner) || (group.isAppBannerVisible && group.appBanner) ? (
+                <div className="relative overflow-hidden px-2 sm:px-4 -pt-2 -sm:pt-6 pb-5">
                   {/* Desktop layout: 16:3 aspect ratio */}
-                  <div className="hidden min-[501px]:block relative aspect-[16/3] w-full">
-                    {group.bannerLink ? (
-                      <a href={group.bannerLink} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                  {group.isWebBannerVisible && group.webBanner && (
+                    <div className="hidden min-[501px]:block relative aspect-[16/3] w-full">
+                      {group.bannerLink ? (
+                        <a href={group.bannerLink} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                          <img
+                            src={group.webBanner}
+                            alt={group.heading || group.name}
+                            className="absolute inset-0 w-full h-full object-cover rounded-lg"
+                          />
+                        </a>
+                      ) : (
                         <img
                           src={group.webBanner}
                           alt={group.heading || group.name}
-                          className="absolute inset-0 w-full h-full object-cover rounded-lg shadow"
+                          className="absolute inset-0 w-full h-full object-cover rounded-lg"
                         />
-                      </a>
-                    ) : (
-                      <img
-                        src={group.webBanner}
-                        alt={group.heading || group.name}
-                        className="absolute inset-0 w-full h-full object-cover rounded-lg shadow"
-                      />
-                    )}
-                  </div>
-                  {/* Mobile layout: 2:1 aspect ratio */}
-                  <div className="block min-[501px]:hidden relative aspect-[2/1] w-full">
-                    {group.bannerLink ? (
-                      <a href={group.bannerLink} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                      )}
+                    </div>
+                  )}
+                  {/* Mobile layout: 5:2 aspect ratio */}
+                  {group.isAppBannerVisible && group.appBanner && (
+                    <div className="block min-[501px]:hidden relative aspect-[5/2] w-full">
+                      {group.bannerLink ? (
+                        <a href={group.bannerLink} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                          <img
+                            src={group.appBanner}
+                            alt={group.heading || group.name}
+                            className="absolute inset-0 w-full h-full object-cover rounded-lg"
+                          />
+                        </a>
+                      ) : (
                         <img
-                          src={group.webBanner}
+                          src={group.appBanner}
                           alt={group.heading || group.name}
-                          className="absolute inset-0 w-full h-full object-cover rounded-lg shadow"
+                          className="absolute inset-0 w-full h-full object-cover rounded-lg"
                         />
-                      </a>
-                    ) : (
-                      <img
-                        src={group.webBanner}
-                        alt={group.heading || group.name}
-                        className="absolute inset-0 w-full h-full object-cover rounded-lg shadow"
-                      />
-                    )}
-                  </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ) : null}
 
               {/* Group header */}
-              <div className={`mx-auto px-2 md:px-4 flex flex-col sm:flex-row gap-3 justify-between items-center mb-3 ${group.isWebBannerVisible && group.isWebBgColorVisible ? "  " : "pt-3"}`}>
-                <h2 className={`text-center sm:text-left uppercase text-xl sm:text-2xl lg:text-3xl font-semibold tracking-tight w-full sm:w-auto ${group.isWebBgColorVisible ? ` ${textColor}` : "text-gray-800"}`}>
+              <div className={`mx-auto px-2 md:px-4 pt-2 flex flex-col sm:flex-row gap-3 justify-between items-center mb-3 ${((group.isWebBannerVisible && group.isWebBgColorVisible) || (group.isAppBannerVisible && group.isAppBgColorVisible)) ? "  " : "pt-3"}`}>
+                <h2 className={`text-center sm:text-left uppercase text-xl sm:text-2xl lg:text-3xl font-semibold tracking-tight w-full sm:w-auto ${appTextColorClass} ${webTextColorClass}`}>
                   {group.heading || group.name}
                 </h2>
                 {group.groupType === 'products' && (
                   <Link href={`/gp/${group?._id}`} className="hidden sm:flex w-full sm:w-auto justify-center">
-                    <Button variant="outline" className="bg-white text-gray-800 border-slate-200 hover:bg-slate-50 w-full sm:w-auto">
+                    <Button variant="outline" className="bg-white cursor-pointer text-gray-800 border-slate-200 hover:bg-slate-50 w-full sm:w-auto">
                       See All Products
                     </Button>
                   </Link>

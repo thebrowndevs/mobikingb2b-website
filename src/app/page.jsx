@@ -12,7 +12,7 @@ export default function Home() {
       {/* <QrModal /> */}
       <Banner />
       <HomeCategory />
-      <SearchBar2 />
+      {/* <SearchBar2 /> */}
       {/* <Group /> */}
       <Group2 />
     </div>

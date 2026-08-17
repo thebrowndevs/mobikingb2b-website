@@ -37,7 +37,7 @@ export default function BannerHome() {
         {/* Desktop skeleton aspect 1920:460 */}
         <div className="hidden min-[501px]:block w-full aspect-[1920/460] bg-slate-200 dark:bg-slate-800 animate-pulse" />
         {/* Mobile skeleton aspect 1:1 */}
-        <div className="block min-[501px]:hidden w-full aspect-square bg-slate-200 dark:bg-slate-800 animate-pulse" />
+        <div className="block min-[501px]:hidden w-full aspect-[5/3] bg-slate-200 dark:bg-slate-800 animate-pulse" />
       </div>
     );
   }
@@ -47,8 +47,11 @@ export default function BannerHome() {
   }
 
   return (
-    <div className="w-full pb-6 mx-auto">
+    <div className="w-full pb-4 sm:pb-6 mx-auto">
       <Swiper
+        style={{
+          "--swiper-pagination-color": "#000000",
+        }}
         modules={[Autoplay, Pagination, Navigation]}
         loop
         speed={600}
@@ -80,7 +83,7 @@ export default function BannerHome() {
                 />
               </div>
               {/* Mobile banner: visible on screens up to 500px (1:1 aspect ratio) */}
-              <div className="block min-[501px]:hidden relative w-full aspect-square">
+              <div className="block min-[501px]:hidden relative w-full aspect-[5/3]">
                 <Image
                   src={banner.mobileUrl || banner.desktopUrl}
                   alt={`Banner ${idx + 1} Mobile`}
