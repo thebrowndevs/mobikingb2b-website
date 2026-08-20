@@ -4,6 +4,7 @@ import ConditionalLayout from "@/components/layout/ConditionalLayout";
 import { AuthProvider } from "@/context/AuthContext";
 import { Toaster } from "@/components/ui/sonner";
 import React from "react";
+import FCMPaymentNotifier from "@/components/FCMPaymentNotifier";
 // import Script from "next/script";
 
 const proximaNova = localFont({
@@ -124,6 +125,7 @@ export default function RootLayout({ children }) {
             {children}
           </ConditionalLayout>
           <Toaster position="top-center" richColors />
+          <FCMPaymentNotifier />
         </AuthProvider>
 
         {/* <Script
