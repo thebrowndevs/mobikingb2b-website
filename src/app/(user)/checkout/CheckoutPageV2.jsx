@@ -8,13 +8,15 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Plus, CheckCircle, FileText, Info } from "lucide-react";
+import { Loader2, Plus, CheckCircle, FileText, Info, CreditCard } from "lucide-react";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { toast } from "sonner";
 import AddressForm from "@/components/AddressForm";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import axios from "axios";
+import Script from "next/script";
 
 // API Functions
 import { getAddressesApi } from "@/lib/services/operations/AddressApi";
@@ -47,7 +49,16 @@ export default function CheckoutPageV2() {
   const [deliveryCharge, setDeliveryCharge] = useState(0);
   const [grandTotal, setGrandTotal] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isBuyNowSubmitting, setIsBuyNowSubmitting] = useState(false);
   const [gstError, setGstError] = useState(null);
+
+  // Limits & Generic Modal
+  const [minOrderLimit, setMinOrderLimit] = useState(0);
+  const [minQuotationLimit, setMinQuotationLimit] = useState(0);
+  const [limitsLoaded, setLimitsLoaded] = useState(false);
+  const [modalConfig, setModalConfig] = useState(null);
+
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
   const GST_REGEX = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/;
 
@@ -80,6 +91,40 @@ export default function CheckoutPageV2() {
       }
     }
   }, [user]);
+
+  // Fetch Limits
+  useEffect(() => {
+    const fetchLimits = async () => {
+      try {
+        const response = await axios.get(`${backendUrl}/policy/limits`);
+        if (response.data?.success) {
+          setMinOrderLimit(response.data.data.minOrderLimit || 0);
+          setMinQuotationLimit(response.data.data.minQuotationLimit || 0);
+        }
+      } catch (err) {
+        console.error("Failed to fetch order limits", err);
+      } finally {
+        setLimitsLoaded(true);
+      }
+    };
+    fetchLimits();
+  }, []);
+
+  const smallerLimit = Math.min(minOrderLimit, minQuotationLimit);
+
+  useEffect(() => {
+    if (limitsLoaded && subtotal > 0 && subtotal < smallerLimit) {
+      setModalConfig({
+        title: "Minimum Cart Value Required",
+        message: "To proceed with checkout, your cart subtotal must be of at least:",
+        highlightText: `₹${smallerLimit.toLocaleString()}`,
+        additionalMessage: `Current subtotal is ₹${subtotal.toLocaleString()}.`,
+        actionText: "Browse Products & Add Items",
+        onAction: () => router.push("/"),
+        showCloseButton: false
+      });
+    }
+  }, [limitsLoaded, subtotal, smallerLimit, router]);
 
   useEffect(() => {
     if (!isLoading && !orderPlaced && user?.cart?.items?.length === 0) {
@@ -231,6 +276,22 @@ export default function CheckoutPageV2() {
   };
 
   const handleRaiseQuotation = async () => {
+    if (minQuotationLimit > 0 && subtotal < minQuotationLimit) {
+      setModalConfig({
+        title: "Minimum Value Required for Order Request",
+        message: "To submit an Order Request, your cart subtotal must be of at least:",
+        highlightText: `₹${minQuotationLimit.toLocaleString()}`,
+        additionalMessage: `Current subtotal is ₹${subtotal.toLocaleString()}.`,
+        actionText: "Add More Items",
+        onAction: () => {
+          setModalConfig(null);
+          router.push("/");
+        },
+        showCloseButton: true
+      });
+      return;
+    }
+
     if (!selectedAddressId) {
       toast.error("Please select a warehouse address.");
       return;
@@ -282,7 +343,130 @@ export default function CheckoutPageV2() {
     }
   };
 
-  if (isLoading || !user || (processedCartItems.length === 0 && !orderPlaced)) {
+  const handleBuyNow = async () => {
+    if (minOrderLimit > 0 && subtotal < minOrderLimit) {
+      setModalConfig({
+        title: "Minimum Order Amount Required",
+        message: "To proceed with direct Buy Now, your cart subtotal must be of at least:",
+        highlightText: `₹${minOrderLimit.toLocaleString()}`,
+        additionalMessage: `Current subtotal is ₹${subtotal.toLocaleString()}.`,
+        actionText: "Add More Items",
+        onAction: () => {
+          setModalConfig(null);
+          router.push("/");
+        },
+        showCloseButton: true
+      });
+      return;
+    }
+
+    if (!selectedAddressId) {
+      toast.error("Please select a warehouse address.");
+      return;
+    }
+    const shippingAddress = addresses.find(
+      (addr) => addr._id === selectedAddressId
+    );
+    if (!customerName || !customerPhone) {
+      toast.error("Please fill in contact name and phone number.");
+      return;
+    }
+
+    if (customerGST && !checkGST(customerGST)) {
+      toast.error("Please correct the GST number before proceeding.");
+      return;
+    }
+
+    setIsBuyNowSubmitting(true);
+
+    try {
+      // 1. Create Online Order
+      const res = await axios.post(
+        `${backendUrl}/orders/online/new`,
+        {
+          name: customerName,
+          email: customerEmail,
+          phoneNo: customerPhone,
+          gst: customerGST,
+          comments: comments.trim(),
+          coupon: coupon || undefined,
+          addressId: shippingAddress?._id,
+          isAppOrder: false
+        },
+        {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        }
+      );
+
+      const rpOrder = res.data?.data;
+      if (!rpOrder) throw new Error("Order creation failed.");
+
+      // 2. Open Razorpay Modal
+      const options = {
+        key: rpOrder.key,
+        amount: rpOrder.amount,
+        currency: rpOrder.currency,
+        name: "Mobiking Wholesale",
+        description: "Direct B2B Checkout Order Payment",
+        order_id: rpOrder.razorpayOrderId,
+        handler: async function (response) {
+          try {
+            // 3. Verify Payment
+            toast.loading("Verifying your payment, please wait...");
+            const verifyRes = await axios.post(
+              `${backendUrl}/orders/online/verify`,
+              {
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+                paymentId: rpOrder.paymentId
+              },
+              {
+                headers: { Authorization: `Bearer ${accessToken}` }
+              }
+            );
+
+            toast.dismiss();
+
+            if (verifyRes.data?.success) {
+              toast.success("Order placed and paid successfully!");
+              if (verifyRes.data?.data?.user) {
+                setUser(verifyRes.data.data.user);
+                localStorage.setItem("user", JSON.stringify(verifyRes.data.data.user));
+              }
+              router.push("/account?tab=orders");
+            } else {
+              toast.error("Payment verification failed. Please check with your bank.");
+            }
+          } catch (verifyErr) {
+            toast.dismiss();
+            console.error("Verification failed:", verifyErr);
+            toast.error("An error occurred during payment verification.");
+          }
+        },
+        prefill: {
+          name: customerName,
+          email: customerEmail,
+          contact: customerPhone
+        },
+        theme: {
+          color: "#ED1C24"
+        }
+      };
+
+      const razorpayInstance = new window.Razorpay(options);
+      razorpayInstance.open();
+
+    } catch (error) {
+      console.error(error);
+      const errMsg = error.response?.data?.message || "Checkout failed. Please check product stock levels.";
+      toast.error(errMsg);
+    } finally {
+      setIsBuyNowSubmitting(false);
+    }
+  };
+
+  if (isLoading || !user || (processedCartItems.length === 0 && !orderPlaced) || !limitsLoaded) {
     return (
       <div className="flex justify-center items-center h-[60vh]">
         <Loader2 className="w-12 h-12 animate-spin text-[#ED1C24]" />
@@ -292,6 +476,55 @@ export default function CheckoutPageV2() {
 
   return (
     <div className="w-full mx-auto p-4">
+      {/* Razorpay checkout script */}
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
+
+      {/* Generic Limits & Warnings Modal */}
+      {modalConfig && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <Card className="w-full max-w-md shadow-2xl border-none">
+            <CardHeader className="text-center pb-2">
+              <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4 text-[#ED1C24]">
+                <Info size={32} />
+              </div>
+              <CardTitle className="text-2xl font-bold tracking-tight">{modalConfig.title}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 text-center">
+              <p className="text-sm text-slate-500 leading-relaxed whitespace-pre-line">
+                {modalConfig.message}
+              </p>
+              {modalConfig.highlightText && (
+                <p className="text-3xl font-extrabold text-[#ED1C24] py-1 tracking-tight">
+                  {modalConfig.highlightText}
+                </p>
+              )}
+              {modalConfig.additionalMessage && (
+                <p className="text-sm text-slate-500 leading-relaxed">
+                  {modalConfig.additionalMessage}
+                </p>
+              )}
+              <div className="flex flex-col gap-2 pt-2">
+                <Button
+                  onClick={modalConfig.onAction}
+                  className="w-full bg-[#ED1C24] hover:bg-[#ED1C24]/90 text-white font-bold py-6 text-base"
+                >
+                  {modalConfig.actionText}
+                </Button>
+                {modalConfig.showCloseButton && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => setModalConfig(null)}
+                    className="w-full text-slate-500 font-semibold"
+                  >
+                    Cancel
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       <Breadcrumb />
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mt-6">
 
@@ -515,24 +748,46 @@ export default function CheckoutPageV2() {
                 </p>
               </div>
 
-              <Button
-                onClick={handleRaiseQuotation}
-                size="lg"
-                className="w-full bg-[#ED1C24] hover:bg-[#ED1C24]/90 text-white cursor-pointer font-bold py-6 text-base"
-                disabled={isSubmitting || !selectedAddressId}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Submitting Request...
-                  </>
-                ) : (
-                  <>
-                    <FileText className="mr-2 h-5 w-5" />
-                    Submit Order Request
-                  </>
-                )}
-              </Button>
+              <div className="space-y-3">
+                <Button
+                  onClick={handleBuyNow}
+                  size="lg"
+                  className="w-full bg-[#ED1C24] hover:bg-[#ED1C24]/90 text-white cursor-pointer font-bold py-6 text-base"
+                  disabled={isSubmitting || isBuyNowSubmitting || !selectedAddressId}
+                >
+                  {isBuyNowSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing Checkout...
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="mr-2 h-5 w-5" />
+                      Buy Now
+                    </>
+                  )}
+                </Button>
+
+                <Button
+                  onClick={handleRaiseQuotation}
+                  variant="secondary"
+                  size="sm"
+                  className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer font-bold py-4 text-sm"
+                  disabled={isSubmitting || isBuyNowSubmitting || !selectedAddressId}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                      Submitting Request...
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="mr-2 h-4 w-4" />
+                      Order Request
+                    </>
+                  )}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
