@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { requestPermissionAndSubscribe } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
@@ -21,6 +21,7 @@ export default function FCMPaymentNotifier() {
   const [incomingRequest, setIncomingRequest] = useState(null);
   const [pendingPayments, setPendingPayments] = useState([]);
   const [isHovered, setIsHovered] = useState(false);
+  const hasSubscribedRef = useRef(null);
 
   const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
@@ -46,17 +47,20 @@ export default function FCMPaymentNotifier() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    const currentUserId = user?._id || "guest";
+    if (hasSubscribedRef.current === currentUserId) return;
 
     // Register FCM subscription unconditionally
     const setupFCM = async () => {
       try {
+        hasSubscribedRef.current = currentUserId;
         await requestPermissionAndSubscribe(user?._id || null);
       } catch (err) {
         console.error("FCM Subscription error:", err);
       }
     };
     setupFCM();
-  }, [user]);
+  }, [user?._id]);
 
   useEffect(() => {
     if (!isAuthenticated || !accessToken) {

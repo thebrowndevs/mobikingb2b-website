@@ -186,6 +186,65 @@ export default function CheckoutPaymentPage({ params: paramsPromise }) {
 
   if (!payment) return null;
 
+  if (payment.status === "Paid") {
+    return (
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
+        <div className="w-full max-w-xl bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 rounded-3xl p-8 shadow-xl text-center space-y-6 animate-scale-up">
+          <div className="mx-auto flex items-center justify-center w-20 h-20 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-500 shadow-inner">
+            <CheckCircle2 className="w-12 h-12 animate-pulse" />
+          </div>
+
+          <div className="space-y-2">
+            <h1 className="text-3xl font-black text-zinc-900 dark:text-white tracking-tight">
+              Payment Successful!
+            </h1>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
+              Your payment of <span className="font-extrabold text-emerald-600 dark:text-emerald-400">₹{payment.amount.toLocaleString("en-IN")}</span> has been processed successfully.
+            </p>
+          </div>
+
+          <div className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 rounded-2xl p-5 divide-y divide-zinc-200/30 dark:divide-zinc-800/30 space-y-3.5 text-left text-sm">
+            <div className="flex justify-between items-center pt-0">
+              <span className="text-zinc-500 font-medium">Order Number</span>
+              <span className="font-extrabold text-zinc-800 dark:text-zinc-200">#{payment.orderIdString}</span>
+            </div>
+            <div className="flex justify-between items-center pt-3.5">
+              <span className="text-zinc-500 font-medium">Transaction ID</span>
+              <span className="font-mono font-bold text-zinc-800 dark:text-zinc-200 text-xs truncate max-w-[200px]">
+                {payment.transactionId || "rp_pay_success_101"}
+              </span>
+            </div>
+            <div className="flex justify-between items-center pt-3.5">
+              <span className="text-zinc-500 font-medium">Payment Method</span>
+              <span className="font-bold text-zinc-800 dark:text-zinc-200">Online</span>
+            </div>
+            <div className="flex justify-between items-center pt-3.5">
+              <span className="text-zinc-500 font-medium">Date & Time</span>
+              <span className="font-semibold text-zinc-600 dark:text-zinc-400">
+                {payment.paidAt ? new Date(payment.paidAt).toLocaleString("en-IN") : new Date().toLocaleString("en-IN")}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 pt-4">
+            <button
+              onClick={() => router.push("/account?tab=orders")}
+              className="flex-1 py-3 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 font-bold rounded-2xl transition-all shadow-md active:scale-95 text-sm"
+            >
+              View Order Details
+            </button>
+            <button
+              onClick={() => router.push("/")}
+              className="flex-1 py-3 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold rounded-2xl transition-all active:scale-95 text-sm"
+            >
+              Back to Home
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const finalAmount = getDiscountedAmount();
   const discountAmount = payment.amount - finalAmount;
 
