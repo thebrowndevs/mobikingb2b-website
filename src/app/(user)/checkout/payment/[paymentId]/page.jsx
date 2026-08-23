@@ -266,56 +266,7 @@ export default function CheckoutPaymentPage({ params: paramsPromise }) {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Order Details Column */}
           <div className="lg:col-span-7 space-y-6">
-            {/* Complete Financial Order Details */}
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 rounded-3xl p-6 shadow-sm">
-              <h2 className="text-xl font-extrabold text-zinc-900 dark:text-white mb-6 flex items-center gap-2">
-                <ShoppingBag className="w-5 h-5 text-blue-600" />
-                Order Financial Status
-              </h2>
-
-              <div className="grid grid-cols-3 gap-4 mb-6">
-                <div className="bg-zinc-50 dark:bg-zinc-950 p-4 rounded-2xl border border-zinc-100 dark:border-zinc-900">
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">
-                    Total Order Value
-                  </span>
-                  <span className="text-lg font-black text-zinc-900 dark:text-white">
-                    ₹{payment.orderAmount.toLocaleString("en-IN")}
-                  </span>
-                </div>
-                <div className="bg-emerald-50/50 dark:bg-emerald-950/20 p-4 rounded-2xl border border-emerald-100/50 dark:border-emerald-900/20">
-                  <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-1">
-                    Paid So Far
-                  </span>
-                  <span className="text-lg font-black text-emerald-700 dark:text-emerald-400">
-                    ₹{payment.amountPaid.toLocaleString("en-IN")}
-                  </span>
-                </div>
-                <div className="bg-rose-50/50 dark:bg-rose-950/20 p-4 rounded-2xl border border-rose-100/50 dark:border-rose-900/20">
-                  <span className="text-[10px] font-bold text-rose-600 uppercase tracking-wider block mb-1">
-                    Balance Remaining
-                  </span>
-                  <span className="text-lg font-black text-rose-700 dark:text-rose-400">
-                    ₹{payment.remainingAmount.toLocaleString("en-IN")}
-                  </span>
-                </div>
-              </div>
-
-              {/* Progress Bar */}
-              <div className="mb-4">
-                <div className="flex justify-between items-center text-xs font-bold text-zinc-500 mb-1.5">
-                  <span>Payment Progress</span>
-                  <span>{payment.orderAmount > 0 ? Math.round((payment.amountPaid / payment.orderAmount) * 100) : 0}% Paid</span>
-                </div>
-                <div className="w-full h-2.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500"
-                    style={{ width: `${payment.orderAmount > 0 ? Math.min(100, (payment.amountPaid / payment.orderAmount) * 100) : 0}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 rounded-3xl p-6 shadow-sm">
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 rounded-xl p-6 shadow-none">
               <h2 className="text-xl font-extrabold text-zinc-900 dark:text-white mb-6 flex items-center gap-2">
                 <ShoppingBag className="w-5 h-5 text-blue-600" />
                 Order Summary Details
@@ -353,7 +304,7 @@ export default function CheckoutPaymentPage({ params: paramsPromise }) {
                         <div key={idx} className="py-4 flex flex-col gap-1">
                           <div className="flex items-center gap-4">
                             {/* Product Thumbnail Image */}
-                            <div className="w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-800/60 overflow-hidden flex items-center justify-center shrink-0">
+                            <div className="w-16 h-16 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-800/60 overflow-hidden flex items-center justify-center shrink-0">
                               {item.imageUrl ? (
                                 <img
                                   src={item.imageUrl}
@@ -433,118 +384,172 @@ export default function CheckoutPaymentPage({ params: paramsPromise }) {
                   </span>
                 </div>
               </div>
-
             </div>
           </div>
 
           {/* Payment Section Column */}
           <div className="lg:col-span-5 space-y-6">
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 rounded-3xl p-6 shadow-sm">
-              <h2 className="text-xl font-extrabold text-zinc-900 dark:text-white mb-6 flex items-center gap-2">
-                <CreditCard className="w-5 h-5 text-blue-600" />
-                Payment Checkout
-              </h2>
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 rounded-xl p-6 shadow-none">
+              {/* Complete Financial Order Details */}
+              <div>
+                <h2 className="text-xl font-extrabold text-zinc-900 dark:text-white mb-6 flex items-center gap-2">
+                  <ShoppingBag className="w-5 h-5 text-blue-600" />
+                  Order Financial Status
+                </h2>
 
-              {/* Coupon section */}
-              {payment?.couponCode ? (
-                <div className="mb-6">
-                  <label className="text-xs font-semibold text-zinc-400 tracking-wider uppercase block mb-2">
-                    Coupon Code
-                  </label>
-                  <div className="flex items-center justify-between bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/60 rounded-xl p-3.5">
-                    <div className="flex items-center gap-2">
-                      <Tag className="w-4 h-4 text-emerald-600" />
-                      <span className="text-sm font-bold text-emerald-700 dark:text-emerald-450">
-                        {payment.couponCode} (-₹{payment.coupon?.toLocaleString("en-IN")})
-                      </span>
-                    </div>
-                    <button
-                      onClick={handleRemoveCoupon}
-                      className="text-xs font-bold text-red-650 hover:text-red-800 transition-colors"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              ) : payment.orderCouponsApplied?.length > 0 ? (
-                null // Hide coupon section completely if already applied to the order elsewhere
-              ) : (
-                <div className="mb-6">
-                  <label className="text-xs font-semibold text-zinc-400 tracking-wider uppercase block mb-2">
-                    Apply Coupon Code
-                  </label>
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <Tag className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                      <input
-                        type="text"
-                        placeholder="Enter Coupon Code"
-                        value={couponCode}
-                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                        className="w-full pl-10 pr-4 py-2 text-sm bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                      />
-                    </div>
-                    <button
-                      onClick={handleApplyCoupon}
-                      className="px-4 py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-semibold rounded-xl text-sm hover:bg-zinc-800 transition-colors"
-                    >
-                      Apply
-                    </button>
-                  </div>
-                  {couponError && (
-                    <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
-                      <AlertCircle className="w-3.5 h-3.5" />
-                      {couponError}
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {/* Pricing Breakout of This Payment Installment */}
-              <div className="space-y-3 mb-6 border-t border-zinc-100 dark:border-zinc-800 pt-4">
-                <span className="text-xs text-zinc-400 font-semibold tracking-wider uppercase block mb-1">
-                  Installment Details
-                </span>
-                <div className="flex justify-between text-sm">
-                  <span className="text-zinc-500">Gross Subtotal</span>
-                  <span className="font-semibold text-zinc-800 dark:text-zinc-200">
-                    ₹{(payment.subtotal || payment.amount).toLocaleString("en-IN")}
-                  </span>
-                </div>
-                {payment.discount > 0 && (
-                  <div className="flex justify-between text-sm text-emerald-600">
-                    <span>
-                      {payment?.couponCode || payment?.orderCouponsApplied?.[0]?.code
-                        ? `Coupon Discount`
-                        : "Installment Discount"}
+                <div className="grid grid-cols-3 gap-3 mb-6">
+                  <div className="bg-zinc-50 dark:bg-zinc-950 p-3.5 rounded-xl border border-zinc-100 dark:border-zinc-900">
+                    <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">
+                      TOTAL VALUE
                     </span>
-                    <span>
-                      - ₹{payment.discount.toLocaleString("en-IN")}
-                      {` (${payment?.couponCode || payment?.orderCouponsApplied?.[0]?.code})`}
+                    <span className="text-sm font-black text-zinc-900 dark:text-white">
+                      ₹{payment.orderAmount.toLocaleString("en-IN")}
                     </span>
                   </div>
-                )}
-                <div className="flex justify-between text-base font-bold border-t border-zinc-100 dark:border-zinc-800 pt-3">
-                  <span className="text-zinc-900 dark:text-white">Amount to Pay</span>
-                  <span className="text-zinc-900 dark:text-white text-lg">
-                    ₹{payment.amount.toLocaleString("en-IN")}
-                  </span>
+                  <div className="bg-emerald-50/50 dark:bg-emerald-950/20 p-3.5 rounded-xl border border-emerald-100/50 dark:border-emerald-900/20">
+                    <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-wider block mb-1">
+                      PAID SO FAR
+                    </span>
+                    <span className="text-sm font-black text-emerald-700 dark:text-emerald-400">
+                      ₹{payment.amountPaid.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                  <div className="bg-rose-50/50 dark:bg-rose-950/20 p-3.5 rounded-xl border border-rose-100/50 dark:border-rose-900/20">
+                    <span className="text-[9px] font-bold text-rose-600 uppercase tracking-wider block mb-1">
+                      BALANCE
+                    </span>
+                    <span className="text-sm font-black text-rose-700 dark:text-rose-450">
+                      ₹{payment.remainingAmount.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="mb-4">
+                  <div className="flex justify-between items-center text-xs font-bold text-zinc-500 mb-1.5">
+                    <span>Payment Progress</span>
+                    <span>{payment.orderAmount > 0 ? Math.round((payment.amountPaid / payment.orderAmount) * 100) : 0}% Paid</span>
+                  </div>
+                  <div className="w-full h-2.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500"
+                      style={{ width: `${payment.orderAmount > 0 ? Math.min(100, (payment.amountPaid / payment.orderAmount) * 100) : 0}%` }}
+                    />
+                  </div>
                 </div>
               </div>
 
-              <button
-                disabled={submittingPayment}
-                onClick={handlePayNow}
-                className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-blue-600/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              >
-                {submittingPayment ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              {/* Separator Divider */}
+              <div className="border-t border-zinc-100 dark:border-zinc-800 my-6" />
+
+              {/* Payment Checkout Details */}
+              <div>
+                <h2 className="text-xl font-extrabold text-zinc-900 dark:text-white mb-6 flex items-center gap-2">
+                  <CreditCard className="w-5 h-5 text-blue-600" />
+                  Payment Checkout
+                </h2>
+
+                {/* Coupon section */}
+                {payment?.couponCode ? (
+                  <div className="mb-6">
+                    <label className="text-xs font-semibold text-zinc-400 tracking-wider uppercase block mb-2">
+                      Coupon Code
+                    </label>
+                    <div className="flex items-center justify-between bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/60 rounded-xl p-3.5">
+                      <div className="flex items-center gap-2">
+                        <Tag className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm font-bold text-emerald-700 dark:text-emerald-450">
+                          {payment.couponCode} (-₹{payment.coupon?.toLocaleString("en-IN")})
+                        </span>
+                      </div>
+                      <button
+                        onClick={handleRemoveCoupon}
+                        className="text-xs font-bold text-red-650 hover:text-red-800 transition-colors"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : payment.orderCouponsApplied?.length > 0 ? (
+                  null // Hide coupon section completely if already applied to the order elsewhere
                 ) : (
-                  <>
-                    Pay with Razorpay
-                  </>
+                  <div className="mb-6">
+                    <label className="text-xs font-semibold text-zinc-400 tracking-wider uppercase block mb-2">
+                      Apply Coupon Code
+                    </label>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <Tag className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                        <input
+                          type="text"
+                          placeholder="Enter Coupon Code"
+                          value={couponCode}
+                          onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                          className="w-full pl-10 pr-4 py-2 text-sm bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        />
+                      </div>
+                      <button
+                        onClick={handleApplyCoupon}
+                        className="px-4 py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-semibold rounded-xl text-sm hover:bg-zinc-800 transition-colors"
+                      >
+                        Apply
+                      </button>
+                    </div>
+                    {couponError && (
+                      <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5" />
+                        {couponError}
+                      </p>
+                    )}
+                  </div>
                 )}
-              </button>
+
+                {/* Pricing Breakout of This Payment Installment */}
+                <div className="space-y-3 mb-6 border-t border-zinc-100 dark:border-zinc-800 pt-4">
+                  <span className="text-xs text-zinc-400 font-semibold tracking-wider uppercase block mb-1">
+                    Installment Details
+                  </span>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-zinc-500">Gross Subtotal</span>
+                    <span className="font-semibold text-zinc-800 dark:text-zinc-200">
+                      ₹{(payment.subtotal || payment.amount).toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                  {payment.discount > 0 && (
+                    <div className="flex justify-between text-sm text-emerald-600">
+                      <span>
+                        {payment?.couponCode || payment?.orderCouponsApplied?.[0]?.code
+                          ? `Coupon Discount`
+                          : "Installment Discount"}
+                      </span>
+                      <span>
+                        - ₹{payment.discount.toLocaleString("en-IN")}
+                        {` (${payment?.couponCode || payment?.orderCouponsApplied?.[0]?.code})`}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-base font-bold border-t border-zinc-100 dark:border-zinc-800 pt-3">
+                    <span className="text-zinc-900 dark:text-white">Amount to Pay</span>
+                    <span className="text-zinc-900 dark:text-white text-lg">
+                      ₹{payment.amount.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  disabled={submittingPayment}
+                  onClick={handlePayNow}
+                  className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                  {submittingPayment ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      Pay with Razorpay
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
