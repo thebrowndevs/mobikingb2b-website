@@ -25,10 +25,29 @@ export default function CheckoutPaymentPage({ params: paramsPromise }) {
   const [loading, setLoading] = useState(true);
   const [couponCode, setCouponCode] = useState("");
   const [couponError, setCouponError] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [submittingPayment, setSubmittingPayment] = useState(false);
 
   const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+
+  const fetchPaymentDetails = async () => {
+    if (!accessToken) return;
+    try {
+      const res = await axios.get(`${backendUrl}/payment/${paymentId}`, {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      const match = res.data?.data;
+
+      if (!match) {
+        toast.error("Payment request not found or already processed.");
+        router.push("/account");
+        return;
+      }
+      setPayment(match);
+    } catch (err) {
+      console.error("Failed to fetch pending payment:", err);
+      toast.error("Failed to load payment details.");
+    }
+  };
 
   useEffect(() => {
     if (isAuthLoading) return;
@@ -38,66 +57,58 @@ export default function CheckoutPaymentPage({ params: paramsPromise }) {
       return;
     }
 
-    const fetchPaymentDetails = async () => {
-      try {
-        setLoading(true);
-        const res = await axios.get(`${backendUrl}/payment/${paymentId}`, {
-          headers: { Authorization: `Bearer ${accessToken}` }
-        });
-        const match = res.data?.data;
-
-        if (!match) {
-          toast.error("Payment request not found or already processed.");
-          router.push("/account");
-          return;
-        }
-        setPayment(match);
-      } catch (err) {
-        console.error("Failed to fetch pending payment:", err);
-        toast.error("Failed to load payment details.");
-      } finally {
-        setLoading(false);
-      }
+    const initFetch = async () => {
+      setLoading(true);
+      await fetchPaymentDetails();
+      setLoading(false);
     };
-
-    fetchPaymentDetails();
+    initFetch();
   }, [accessToken, isAuthLoading, paymentId]);
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return;
     setCouponError("");
     try {
-      // Validate coupon on backend
-      const res = await axios.get(`${backendUrl}/coupon/check/${couponCode}/online`, {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
-      const couponData = res.data?.data;
-      if (couponData) {
-        setAppliedCoupon(couponData);
-        toast.success("Coupon code applied successfully!");
-      }
+      setLoading(true);
+      await axios.post(
+        `${backendUrl}/coupon/apply`,
+        { orderId: payment.orderId, code: couponCode.trim() },
+        {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        }
+      );
+      toast.success("Coupon code applied successfully!");
+      setCouponCode("");
+      await fetchPaymentDetails();
     } catch (err) {
       const errMsg = err.response?.data?.message || "Invalid coupon code.";
       setCouponError(errMsg);
       toast.error(errMsg);
-      setAppliedCoupon(null);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getDiscountedAmount = () => {
-    if (!payment) return 0;
-    if (!appliedCoupon) return payment.amount;
-
-    let discount = 0;
-    if (appliedCoupon.percent) {
-      discount = payment.amount * (parseFloat(appliedCoupon.percent) * 0.01);
-      if (appliedCoupon.value && discount > appliedCoupon.value) {
-        discount = appliedCoupon.value;
-      }
-    } else {
-      discount = appliedCoupon.value || 0;
+  const handleRemoveCoupon = async () => {
+    try {
+      setLoading(true);
+      await axios.post(
+        `${backendUrl}/coupon/remove`,
+        { orderId: payment.orderId },
+        {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        }
+      );
+      toast.success("Coupon removed successfully!");
+      setCouponCode("");
+      setCouponError("");
+      await fetchPaymentDetails();
+    } catch (err) {
+      const errMsg = err.response?.data?.message || "Failed to remove coupon.";
+      toast.error(errMsg);
+    } finally {
+      setLoading(false);
     }
-    return Math.max(0, payment.amount - discount);
   };
 
   const handlePayNow = async () => {
@@ -109,7 +120,7 @@ export default function CheckoutPaymentPage({ params: paramsPromise }) {
         `${backendUrl}/payment/create-razorpay-order`,
         {
           paymentId: payment.paymentId,
-          couponCode: appliedCoupon ? appliedCoupon.code : undefined
+          // couponCode: appliedCoupon ? appliedCoupon.code : undefined
         },
         {
           headers: { Authorization: `Bearer ${accessToken}` }
@@ -245,8 +256,7 @@ export default function CheckoutPaymentPage({ params: paramsPromise }) {
     );
   }
 
-  const finalAmount = getDiscountedAmount();
-  const discountAmount = payment.amount - finalAmount;
+
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 py-12 px-4 sm:px-6 lg:px-8">
@@ -395,11 +405,20 @@ export default function CheckoutPaymentPage({ params: paramsPromise }) {
                     ₹{payment.orderSubtotal.toLocaleString("en-IN")}
                   </span>
                 </div>
-                {payment.orderDiscount > 0 && (
-                  <div className="flex justify-between text-sm text-emerald-600">
-                    <span>Subtotal Discount</span>
-                    <span>- ₹{payment.orderDiscount.toLocaleString("en-IN")}</span>
+                {payment?.orderCouponsApplied?.length > 0 ? (
+                  <div className="flex justify-between text-sm text-emerald-600 font-semibold">
+                    <span>Coupon Discount </span>
+                    <span>- ₹{payment?.orderCouponsApplied?.[0]?.appliedValue?.toLocaleString("en-IN")}
+                      {` (${payment?.orderCouponsApplied?.[0]?.code})`}
+                    </span>
                   </div>
+                ) : (
+                  payment.orderDiscount > 0 && (
+                    <div className="flex justify-between text-sm text-emerald-600">
+                      <span>Subtotal Discount</span>
+                      <span>- ₹{payment.orderDiscount.toLocaleString("en-IN")}</span>
+                    </div>
+                  )
                 )}
                 <div className="flex justify-between text-sm">
                   <span className="text-zinc-500">Delivery Charge</span>
@@ -427,41 +446,59 @@ export default function CheckoutPaymentPage({ params: paramsPromise }) {
               </h2>
 
               {/* Coupon section */}
-              <div className="mb-6">
-                <label className="text-xs font-semibold text-zinc-400 tracking-wider uppercase block mb-2">
-                  Apply Coupon Code
-                </label>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Tag className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                    <input
-                      type="text"
-                      placeholder="Enter Coupon Code"
-                      value={couponCode}
-                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                      className="w-full pl-10 pr-4 py-2 text-sm bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                    />
+              {payment?.couponCode ? (
+                <div className="mb-6">
+                  <label className="text-xs font-semibold text-zinc-400 tracking-wider uppercase block mb-2">
+                    Coupon Code
+                  </label>
+                  <div className="flex items-center justify-between bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/60 rounded-xl p-3.5">
+                    <div className="flex items-center gap-2">
+                      <Tag className="w-4 h-4 text-emerald-600" />
+                      <span className="text-sm font-bold text-emerald-700 dark:text-emerald-450">
+                        {payment.couponCode} (-₹{payment.coupon?.toLocaleString("en-IN")})
+                      </span>
+                    </div>
+                    <button
+                      onClick={handleRemoveCoupon}
+                      className="text-xs font-bold text-red-650 hover:text-red-800 transition-colors"
+                    >
+                      Remove
+                    </button>
                   </div>
-                  <button
-                    onClick={handleApplyCoupon}
-                    className="px-4 py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-semibold rounded-xl text-sm hover:bg-zinc-800 transition-colors"
-                  >
-                    Apply
-                  </button>
                 </div>
-                {couponError && (
-                  <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
-                    <AlertCircle className="w-3.5 h-3.5" />
-                    {couponError}
-                  </p>
-                )}
-                {appliedCoupon && (
-                  <p className="text-xs text-emerald-600 mt-2 flex items-center gap-1 font-semibold">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    Coupon &quot;{appliedCoupon.code}&quot; applied!
-                  </p>
-                )}
-              </div>
+              ) : payment.orderCouponsApplied?.length > 0 ? (
+                null // Hide coupon section completely if already applied to the order elsewhere
+              ) : (
+                <div className="mb-6">
+                  <label className="text-xs font-semibold text-zinc-400 tracking-wider uppercase block mb-2">
+                    Apply Coupon Code
+                  </label>
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Tag className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                      <input
+                        type="text"
+                        placeholder="Enter Coupon Code"
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                        className="w-full pl-10 pr-4 py-2 text-sm bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      />
+                    </div>
+                    <button
+                      onClick={handleApplyCoupon}
+                      className="px-4 py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-semibold rounded-xl text-sm hover:bg-zinc-800 transition-colors"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                  {couponError && (
+                    <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      {couponError}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Pricing Breakout of This Payment Installment */}
               <div className="space-y-3 mb-6 border-t border-zinc-100 dark:border-zinc-800 pt-4">
@@ -471,25 +508,26 @@ export default function CheckoutPaymentPage({ params: paramsPromise }) {
                 <div className="flex justify-between text-sm">
                   <span className="text-zinc-500">Gross Subtotal</span>
                   <span className="font-semibold text-zinc-800 dark:text-zinc-200">
-                    ₹{payment.amount.toLocaleString("en-IN")}
+                    ₹{(payment.subtotal || payment.amount).toLocaleString("en-IN")}
                   </span>
                 </div>
                 {payment.discount > 0 && (
                   <div className="flex justify-between text-sm text-emerald-600">
-                    <span>Installment Discount</span>
-                    <span>- ₹{payment.discount.toLocaleString("en-IN")}</span>
-                  </div>
-                )}
-                {discountAmount > 0 && (
-                  <div className="flex justify-between text-sm text-emerald-600">
-                    <span>Coupon Discount</span>
-                    <span>- ₹{discountAmount.toLocaleString("en-IN")}</span>
+                    <span>
+                      {payment?.couponCode || payment?.orderCouponsApplied?.[0]?.code
+                        ? `Coupon Discount`
+                        : "Installment Discount"}
+                    </span>
+                    <span>
+                      - ₹{payment.discount.toLocaleString("en-IN")}
+                      {` (${payment?.couponCode || payment?.orderCouponsApplied?.[0]?.code})`}
+                    </span>
                   </div>
                 )}
                 <div className="flex justify-between text-base font-bold border-t border-zinc-100 dark:border-zinc-800 pt-3">
                   <span className="text-zinc-900 dark:text-white">Amount to Pay</span>
                   <span className="text-zinc-900 dark:text-white text-lg">
-                    ₹{finalAmount.toLocaleString("en-IN")}
+                    ₹{payment.amount.toLocaleString("en-IN")}
                   </span>
                 </div>
               </div>
