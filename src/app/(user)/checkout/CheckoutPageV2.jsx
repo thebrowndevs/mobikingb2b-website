@@ -168,17 +168,20 @@ export default function CheckoutPageV2() {
       let discountedAmount = subtotal * (parseFloat(appliedCoupon?.percent) * 0.01);
       discountedAmount = parseFloat(discountedAmount.toFixed(2));
 
-      if (discountedAmount >= appliedCoupon?.value) {
-        setDiscount(parseFloat(appliedCoupon?.value));
-      } else {
-        setDiscount(discountedAmount);
-      }
+      const finalDiscount = discountedAmount >= Number(appliedCoupon?.value)
+        ? parseFloat(appliedCoupon?.value)
+        : discountedAmount;
+
+      setDiscount(finalDiscount);
       setCoupon(appliedCoupon?._id);
+      // Update grand total to reflect coupon saving
+      setGrandTotal(parseFloat(Math.max(0, subtotal - finalDiscount + deliveryCharge).toFixed(2)));
       toast.success("Coupon applied successfully");
     } else {
       setCoupon(null);
       setCouponCode("");
       setDiscount(0);
+      setGrandTotal(parseFloat((subtotal + deliveryCharge).toFixed(2)));
     }
     setCouponLoading(false);
   };
@@ -590,20 +593,21 @@ export default function CheckoutPageV2() {
                 />
               </div>
 
-              {/* <div className="space-y-2">
+              <div className="space-y-2">
                 <Label htmlFor="coupon">Coupon Code (Optional)</Label>
-                <div className="flex gap-4">
+                <div className="flex gap-2">
                   <Input
                     className={`${coupon ? "border-green-500 bg-green-50 text-green-700 font-semibold" : ""}`}
                     id="coupon"
                     type="text"
+                    placeholder="Enter coupon code"
                     value={couponCode}
                     readOnly={!!coupon}
-                    onChange={(e) => setCouponCode(e.target.value)}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                   />
                   {!coupon ? (
-                    <Button type="button" onClick={applyCoupon} disabled={couponLoading}>
-                      Apply
+                    <Button type="button" onClick={applyCoupon} disabled={couponLoading} className="shrink-0">
+                      {couponLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply"}
                     </Button>
                   ) : (
                     <Button
@@ -613,14 +617,21 @@ export default function CheckoutPageV2() {
                         setCoupon(null);
                         setDiscount(0);
                         setCouponCode("");
+                        setGrandTotal(parseFloat((subtotal + deliveryCharge).toFixed(2)));
                       }}
                       disabled={couponLoading}
+                      className="shrink-0"
                     >
-                      Reset
+                      Remove
                     </Button>
                   )}
                 </div>
-              </div> */}
+                {coupon && discount > 0 && (
+                  <p className="text-xs text-green-600 font-semibold">
+                    ✓ Coupon applied! You save ₹{discount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </p>
+                )}
+              </div>
             </CardContent>
           </Card>
 
@@ -732,6 +743,18 @@ export default function CheckoutPageV2() {
                   <p>Subtotal</p>
                   <p>₹{subtotal.toLocaleString()}</p>
                 </div>
+                {coupon && discount > 0 && (
+                  <div className="flex justify-between text-green-600 font-medium">
+                    <p>Coupon Discount</p>
+                    <p>- ₹{discount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                  </div>
+                )}
+                {deliveryCharge > 0 && (
+                  <div className="flex justify-between font-medium">
+                    <p>Delivery Charge</p>
+                    <p>₹{deliveryCharge.toLocaleString()}</p>
+                  </div>
+                )}
               </div>
 
               <Separator />
@@ -768,25 +791,28 @@ export default function CheckoutPageV2() {
                   )}
                 </Button>
 
-                <Button
-                  onClick={handleRaiseQuotation}
-                  variant="secondary"
-                  size="sm"
-                  className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer font-bold py-4 text-sm"
-                  disabled={isSubmitting || isBuyNowSubmitting || !selectedAddressId}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-                      Submitting Request...
-                    </>
-                  ) : (
-                    <>
-                      <FileText className="mr-2 h-4 w-4" />
-                      Order Request
-                    </>
-                  )}
-                </Button>
+                {
+                  !coupon &&
+                  <Button
+                    onClick={handleRaiseQuotation}
+                    variant="secondary"
+                    size="sm"
+                    className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer font-bold py-4 text-sm"
+                    disabled={isSubmitting || isBuyNowSubmitting || !selectedAddressId}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                        Submitting Request...
+                      </>
+                    ) : (
+                      <>
+                        <FileText className="mr-2 h-4 w-4" />
+                        Order Request
+                      </>
+                    )}
+                  </Button>
+                }
               </div>
             </CardContent>
           </Card>
