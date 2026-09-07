@@ -18,6 +18,14 @@ import { Textarea } from "@/components/ui/textarea";
 import axios from "axios";
 import Script from "next/script";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+
 // API Functions
 import { getAddressesApi } from "@/lib/services/operations/AddressApi";
 import { createQuotationApi } from "@/lib/services/operations/QuotationApi";
@@ -37,6 +45,7 @@ export default function CheckoutPageV2() {
   const [addresses, setAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [isAddressFormOpen, setIsAddressFormOpen] = useState(false);
+  const [isGatewayModalOpen, setIsGatewayModalOpen] = useState(false);
   const [couponLoading, setCouponLoading] = useState(false);
   const [addressLoading, setAddressLoading] = useState(true);
   const [cartLoading, setCartLoading] = useState(true);
@@ -52,9 +61,12 @@ export default function CheckoutPageV2() {
   const [isBuyNowSubmitting, setIsBuyNowSubmitting] = useState(false);
   const [gstError, setGstError] = useState(null);
 
-  // Limits & Generic Modal
+  // Limits, Gateway Settings & Generic Modal
   const [minOrderLimit, setMinOrderLimit] = useState(0);
   const [minQuotationLimit, setMinQuotationLimit] = useState(0);
+  const [enableRazorpay, setEnableRazorpay] = useState(true);
+  const [enablePhonepe, setEnablePhonepe] = useState(true);
+  const [selectedGateway, setSelectedGateway] = useState("razorpay"); // 'razorpay' | 'phonepe'
   const [limitsLoaded, setLimitsLoaded] = useState(false);
   const [modalConfig, setModalConfig] = useState(null);
 
@@ -92,7 +104,7 @@ export default function CheckoutPageV2() {
     }
   }, [user]);
 
-  // Fetch Limits
+  // Fetch Limits and Gateway Settings
   useEffect(() => {
     const fetchLimits = async () => {
       try {
@@ -100,6 +112,12 @@ export default function CheckoutPageV2() {
         if (response.data?.success) {
           setMinOrderLimit(response.data.data.minOrderLimit || 0);
           setMinQuotationLimit(response.data.data.minQuotationLimit || 0);
+          const rz = response.data.data.enableRazorpay ?? true;
+          const pp = response.data.data.enablePhonepe ?? true;
+          setEnableRazorpay(rz);
+          setEnablePhonepe(pp);
+          if (!rz && pp) setSelectedGateway("phonepe");
+          else if (rz) setSelectedGateway("razorpay");
         }
       } catch (err) {
         console.error("Failed to fetch order limits", err);
@@ -346,7 +364,7 @@ export default function CheckoutPageV2() {
     }
   };
 
-  const handleBuyNow = async () => {
+  const openGatewayModal = () => {
     if (minOrderLimit > 0 && subtotal < minOrderLimit) {
       setModalConfig({
         title: "Minimum Order Amount Required",
@@ -367,9 +385,6 @@ export default function CheckoutPageV2() {
       toast.error("Please select a warehouse address.");
       return;
     }
-    const shippingAddress = addresses.find(
-      (addr) => addr._id === selectedAddressId
-    );
     if (!customerName || !customerPhone) {
       toast.error("Please fill in contact name and phone number.");
       return;
@@ -380,10 +395,25 @@ export default function CheckoutPageV2() {
       return;
     }
 
+    if (!enableRazorpay && !enablePhonepe) {
+      toast.error("Online payment is currently unavailable. Please raise an order request.");
+      return;
+    }
+
+    setIsGatewayModalOpen(true);
+  };
+
+  const handleBuyNow = async (gatewayOverride) => {
+    const targetGateway = gatewayOverride || selectedGateway;
+    setIsGatewayModalOpen(false);
     setIsBuyNowSubmitting(true);
 
+    const shippingAddress = addresses.find(
+      (addr) => addr._id === selectedAddressId
+    );
+
     try {
-      // 1. Create Online Order
+      // 1. Create Online Order via V1 endpoint with target gateway
       const res = await axios.post(
         `${backendUrl}/orders/online/new`,
         {
@@ -394,6 +424,7 @@ export default function CheckoutPageV2() {
           comments: comments.trim(),
           coupon: coupon || undefined,
           addressId: shippingAddress?._id,
+          gateway: targetGateway,
           isAppOrder: false
         },
         {
@@ -401,17 +432,24 @@ export default function CheckoutPageV2() {
         }
       );
 
-      const rpOrder = res.data?.data;
-      if (!rpOrder) throw new Error("Order creation failed.");
+      const orderData = res.data?.data;
+      if (!orderData) throw new Error("Order creation failed.");
+
+      if (orderData.gateway === "phonepe" && orderData.url) {
+        // PhonePe flow: redirect user to PhonePe checkout URL
+        toast.loading("Redirecting to PhonePe payment gateway...");
+        window.location.href = orderData.url;
+        return;
+      }
 
       // 2. Open Razorpay Modal
       const options = {
-        key: rpOrder.key,
-        amount: rpOrder.amount,
-        currency: rpOrder.currency,
+        key: orderData.key || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: orderData.amount,
+        currency: orderData.currency,
         name: "Mobiking Wholesale",
         description: "Direct B2B Checkout Order Payment",
-        order_id: rpOrder.razorpayOrderId,
+        order_id: orderData.razorpayOrderId,
         handler: async function (response) {
           try {
             // 3. Verify Payment
@@ -422,7 +460,7 @@ export default function CheckoutPageV2() {
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_signature: response.razorpay_signature,
-                paymentId: rpOrder.paymentId
+                paymentId: orderData.paymentId
               },
               {
                 headers: { Authorization: `Bearer ${accessToken}` }
@@ -773,7 +811,7 @@ export default function CheckoutPageV2() {
 
               <div className="space-y-3">
                 <Button
-                  onClick={handleBuyNow}
+                  onClick={openGatewayModal}
                   size="lg"
                   className="w-full bg-[#ED1C24] hover:bg-[#ED1C24]/90 text-white cursor-pointer font-bold py-6 text-base"
                   disabled={isSubmitting || isBuyNowSubmitting || !selectedAddressId}
@@ -825,6 +863,62 @@ export default function CheckoutPageV2() {
         onClose={() => setIsAddressFormOpen(false)}
         onAddressChange={handleAddressChange}
       />
+
+      {/* Payment Gateway Modal */}
+      <Dialog open={isGatewayModalOpen} onOpenChange={setIsGatewayModalOpen}>
+        <DialogContent className="sm:max-w-md bg-white">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-slate-900">Select Payment Method</DialogTitle>
+            <DialogDescription className="text-sm text-slate-500">
+              Choose your preferred payment gateway to proceed with your order.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2">
+            {enableRazorpay && (
+              <div
+                onClick={() => handleBuyNow("razorpay")}
+                className="relative p-4 border rounded-xl cursor-pointer hover:border-[#ED1C24] hover:bg-red-50/20 transition-all flex items-center justify-between border-slate-200"
+              >
+                <div className="flex items-center gap-3">
+                  <img src="/razorpay-icon.png" alt="Razorpay" className="w-9 h-9 object-contain" />
+                  <div>
+                    <p className="font-semibold text-sm text-slate-900">Razorpay</p>
+                    <p className="text-xs text-slate-500">UPI, Credit/Debit Cards, NetBanking, Wallets</p>
+                  </div>
+                </div>
+                <Button size="sm" className="bg-[#ED1C24] hover:bg-[#ED1C24]/90 text-white font-semibold text-xs px-4">
+                  Pay Now
+                </Button>
+              </div>
+            )}
+
+            {enablePhonepe && (
+              <div
+                onClick={() => handleBuyNow("phonepe")}
+                className="relative p-4 border rounded-xl cursor-pointer hover:border-[#ED1C24] hover:bg-red-50/20 transition-all flex items-center justify-between border-slate-200"
+              >
+                <div className="flex items-center gap-3">
+                  <img src="/phonepe-icon.webp" alt="PhonePe" className="w-9 h-9 object-contain" />
+                  <div>
+                    <p className="font-semibold text-sm text-slate-900">PhonePe</p>
+                    <p className="text-xs text-slate-500">PhonePe UPI, QR, Credit/Debit Cards, NetBanking</p>
+                  </div>
+                </div>
+                <Button size="sm" className="bg-[#ED1C24] hover:bg-[#ED1C24]/90 text-white font-semibold text-xs px-4">
+                  Pay Now
+                </Button>
+              </div>
+            )}
+
+            {!enableRazorpay && !enablePhonepe && (
+              <p className="text-sm text-amber-600 bg-amber-50 p-3 rounded border border-amber-200">
+                Online payment options are currently unavailable. Please click <strong>Order Request</strong> to request a manual quotation.
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

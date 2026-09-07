@@ -27,7 +27,32 @@ export default function CheckoutPaymentPage({ params: paramsPromise }) {
   const [couponError, setCouponError] = useState("");
   const [submittingPayment, setSubmittingPayment] = useState(false);
 
+  // Gateway Settings State
+  const [enableRazorpay, setEnableRazorpay] = useState(true);
+  const [enablePhonepe, setEnablePhonepe] = useState(true);
+  const [selectedGateway, setSelectedGateway] = useState("razorpay"); // 'razorpay' | 'phonepe'
+
   const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+
+  // Fetch Gateway Settings
+  useEffect(() => {
+    const fetchLimits = async () => {
+      try {
+        const response = await axios.get(`${backendUrl}/policy/limits`);
+        if (response.data?.success) {
+          const rz = response.data.data.enableRazorpay ?? true;
+          const pp = response.data.data.enablePhonepe ?? true;
+          setEnableRazorpay(rz);
+          setEnablePhonepe(pp);
+          if (!rz && pp) setSelectedGateway("phonepe");
+          else if (rz) setSelectedGateway("razorpay");
+        }
+      } catch (err) {
+        console.error("Failed to fetch gateway limits", err);
+      }
+    };
+    fetchLimits();
+  }, []);
 
   const fetchPaymentDetails = async () => {
     if (!accessToken) return;
@@ -113,33 +138,43 @@ export default function CheckoutPaymentPage({ params: paramsPromise }) {
 
   const handlePayNow = async () => {
     if (!payment) return;
+    if (!enableRazorpay && !enablePhonepe) {
+      toast.error("Online payment is currently unavailable.");
+      return;
+    }
     setSubmittingPayment(true);
     try {
-      // 1. Create Razorpay order
+      // Create Gateway Order (Razorpay or PhonePe)
       const res = await axios.post(
-        `${backendUrl}/payment/create-razorpay-order`,
+        `${backendUrl}/payment/create-order`,
         {
           paymentId: payment.paymentId,
-          // couponCode: appliedCoupon ? appliedCoupon.code : undefined
+          gateway: selectedGateway
         },
         {
           headers: { Authorization: `Bearer ${accessToken}` }
         }
       );
 
-      const rpOrder = res.data?.data;
-      if (!rpOrder) throw new Error("Order creation failed.");
+      const gatewayOrder = res.data?.data;
+      if (!gatewayOrder) throw new Error("Order creation failed.");
 
-      // 2. Configure Razorpay Standard Checkout
+      if (gatewayOrder.gateway === "phonepe" && gatewayOrder.redirectUrl) {
+        // PhonePe flow: redirect user to PhonePe payment URL
+        toast.loading("Redirecting to PhonePe payment gateway...");
+        window.location.href = gatewayOrder.redirectUrl;
+        return;
+      }
+
+      // Razorpay flow: open Razorpay inline modal
       const options = {
-        key: rpOrder.key,
-        amount: rpOrder.amount,
-        currency: rpOrder.currency,
+        key: gatewayOrder.key,
+        amount: gatewayOrder.amount,
+        currency: gatewayOrder.currency,
         name: "Mobiking Wholesale",
         description: `Payment for Order #${payment.orderIdString}`,
-        order_id: rpOrder.razorpayOrderId,
+        order_id: gatewayOrder.razorpayOrderId,
         handler: async function (response) {
-          // 3. Verify Payment
           try {
             setLoading(true);
             const verifyRes = await axios.post(
@@ -173,7 +208,7 @@ export default function CheckoutPaymentPage({ params: paramsPromise }) {
           contact: user?.phoneNumber || ""
         },
         theme: {
-          color: "#2563EB"
+          color: "#ED1C24"
         }
       };
 
@@ -536,8 +571,62 @@ export default function CheckoutPaymentPage({ params: paramsPromise }) {
                   </div>
                 </div>
 
+                {/* Payment Gateway Selection */}
+                <div className="space-y-3 mb-6 border-t border-zinc-100 dark:border-zinc-800 pt-4">
+                  <span className="text-xs text-zinc-400 font-semibold tracking-wider uppercase block mb-1">
+                    Select Payment Gateway
+                  </span>
+                  {enableRazorpay && (
+                    <div
+                      onClick={() => setSelectedGateway("razorpay")}
+                      className={`p-3.5 border rounded-xl cursor-pointer transition-all flex items-center justify-between ${selectedGateway === "razorpay"
+                        ? "border-blue-600 bg-blue-50/50 dark:bg-blue-950/20 ring-1 ring-blue-600"
+                        : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300"
+                        }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <img src="/razorpay-icon.png" alt="Razorpay" className="w-7 h-7 object-contain" />
+                        <div>
+                          <p className="font-bold text-sm text-zinc-800 dark:text-zinc-200">Razorpay</p>
+                          <p className="text-[11px] text-zinc-400">UPI, Cards, NetBanking, Wallets</p>
+                        </div>
+                      </div>
+                      {selectedGateway === "razorpay" && (
+                        <div className="w-4 h-4 rounded-full bg-blue-600 flex items-center justify-center text-white text-[10px]">✓</div>
+                      )}
+                    </div>
+                  )}
+
+                  {enablePhonepe && (
+                    <div
+                      onClick={() => setSelectedGateway("phonepe")}
+                      className={`p-3.5 border rounded-xl cursor-pointer transition-all flex items-center justify-between ${selectedGateway === "phonepe"
+                        ? "border-blue-600 bg-blue-50/50 dark:bg-blue-950/20 ring-1 ring-blue-600"
+                        : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300"
+                        }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <img src="/phonepe-icon.webp" alt="PhonePe" className="w-7 h-7 object-contain" />
+                        <div>
+                          <p className="font-bold text-sm text-zinc-800 dark:text-zinc-200">PhonePe</p>
+                          <p className="text-[11px] text-zinc-400">PhonePe UPI, QR, Cards, NetBanking</p>
+                        </div>
+                      </div>
+                      {selectedGateway === "phonepe" && (
+                        <div className="w-4 h-4 rounded-full bg-blue-600 flex items-center justify-center text-white text-[10px]">✓</div>
+                      )}
+                    </div>
+                  )}
+
+                  {!enableRazorpay && !enablePhonepe && (
+                    <p className="text-xs text-amber-600 bg-amber-50 p-3 rounded-xl border border-amber-200">
+                      Online payment is currently unavailable.
+                    </p>
+                  )}
+                </div>
+
                 <button
-                  disabled={submittingPayment}
+                  disabled={submittingPayment || (!enableRazorpay && !enablePhonepe)}
                   onClick={handlePayNow}
                   className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
@@ -545,7 +634,7 @@ export default function CheckoutPaymentPage({ params: paramsPromise }) {
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <>
-                      Pay with Razorpay
+                      Pay ₹{payment.amount.toLocaleString("en-IN")} via {selectedGateway === "phonepe" ? "PhonePe" : "Razorpay"}
                     </>
                   )}
                 </button>
