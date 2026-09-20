@@ -78,7 +78,8 @@ export const removeFromCartById = async (body, accessToken) => {
 
     return apiResponse.data || null;
   } catch (error) {
-    console.error("Error adding product to cart:", error);
+    toast.error(error.response?.data?.message || error.message);
+    console.error("Error removing product from cart:", error);
     return null;
   }
 };

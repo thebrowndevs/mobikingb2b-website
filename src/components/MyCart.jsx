@@ -120,7 +120,7 @@ export default function MyCart({ isOpen, onClose }) {
       }
     } catch (err) {
       console.error("Cart update error:", err);
-      toast.error(`Failed to update cart.`);
+      toast.error(err?.response?.data?.message || err?.message || "Failed to update cart.");
     } finally {
       setLoadingItemId(null);
     }
@@ -186,7 +186,7 @@ export default function MyCart({ isOpen, onClose }) {
                             <div key={item.uniqueId} className="flex items-center justify-between pl-4 py-1">
                               <div className="text-left">
                                 <span className="font-semibold text-slate-700 capitalize text-xs">{item.variantName}</span>
-                                <span className="text-[10px] text-slate-500 block">₹{item.price.toFixed(2)} / unit</span>
+                                <span className="text-xs font-bold text-slate-800 block mt-0.5">₹{item.price.toFixed(2)} / unit</span>
                               </div>
 
                               <div className="flex items-center gap-3">
@@ -223,7 +223,7 @@ export default function MyCart({ isOpen, onClose }) {
                                   type="button"
                                   disabled={isLoading}
                                   onClick={() => handleUpdateCart("remove", group.productId, item.variantId, item.quantity, item.uniqueId)}
-                                  className="text-slate-400 hover:text-[#ED1C24] transition text-xs font-semibold p-1"
+                                  className="text-[#ED1C24] hover:text-[#D1171D] transition text-xs font-bold p-1"
                                 >
                                   Remove
                                 </button>

@@ -30,7 +30,7 @@ import {
 import { getAddressesApi } from "@/lib/services/operations/AddressApi";
 import { createQuotationApi } from "@/lib/services/operations/QuotationApi";
 import { verifyCoupon } from "@/lib/services/operations/OrderApi";
-import { getMyCart } from "@/lib/services/operations/CartApi";
+import { getMyCart, removeFromCartById } from "@/lib/services/operations/CartApi";
 
 export default function CheckoutPageV2() {
   const { user, accessToken, setUser, isLoading } = useAuth();
@@ -129,6 +129,28 @@ export default function CheckoutPageV2() {
   }, []);
 
   const smallerLimit = Math.min(minOrderLimit, minQuotationLimit);
+
+  const handleRemoveCartItem = async (productId, variantId, quantity) => {
+    if (!accessToken) return;
+    const body = {
+      items: [{
+        productId,
+        variantId,
+        quantity
+      }]
+    };
+    try {
+      const response = await removeFromCartById(body, accessToken);
+      if (response?.user) {
+        setUser(response.user);
+        localStorage.setItem("user", JSON.stringify(response.user));
+        toast.success("Item removed from cart");
+      }
+    } catch (err) {
+      console.error("Error removing cart item:", err);
+      toast.error("Failed to remove item");
+    }
+  };
 
   useEffect(() => {
     if (limitsLoaded && subtotal > 0 && subtotal < smallerLimit) {
@@ -256,6 +278,7 @@ export default function CheckoutPageV2() {
     if (rawItems.length > 0) {
       const itemsForDisplay = rawItems.map((item) => ({
         productId: item.productId?._id,
+        variantId: item.variantId,
         name: item.productId?.fullName || "Unnamed Product",
         image: item.productId?.images?.[0] || "/placeholder.png",
         price: item.price || 0,
@@ -282,6 +305,11 @@ export default function CheckoutPageV2() {
       setTotalSaved(newTotalSaved);
       setDeliveryCharge(0);
       setGrandTotal(newSubtotal);
+    } else {
+      setProcessedCartItems([]);
+      setSubtotal(0);
+      setTotalSaved(0);
+      setGrandTotal(0);
     }
   }, [user]);
 
@@ -567,10 +595,10 @@ export default function CheckoutPageV2() {
       )}
 
       <Breadcrumb />
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mt-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-6">
 
         {/* Left Section */}
-        <div className="lg:col-span-3 space-y-6">
+        <div className="lg:col-span-5 space-y-6">
 
           {/* User Details */}
           <Card>
@@ -734,7 +762,7 @@ export default function CheckoutPageV2() {
         </div>
 
         {/* Right Section */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-7">
           <Card className="sticky top-24">
             <CardHeader>
               <CardTitle className="text-lg font-semibold flex justify-between items-center">
@@ -749,11 +777,11 @@ export default function CheckoutPageV2() {
             <CardContent className="space-y-6">
 
               {/* Item Details */}
-              <ul className="space-y-4 max-h-64 overflow-y-auto pr-2">
+              <ul className="space-y-4 max-h-72 overflow-y-auto pr-2">
                 {processedCartItems.map((item) => (
                   <li
                     key={`${item.productId}-${item.variantName}`}
-                    className="flex items-center gap-4 text-sm"
+                    className="flex items-center gap-3.5 text-sm pb-3 border-b border-slate-100 last:border-b-0 last:pb-0"
                   >
                     <img
                       src={item.image}
@@ -761,14 +789,23 @@ export default function CheckoutPageV2() {
                       className="w-12 h-12 object-contain rounded border bg-white p-0.5 shrink-0"
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold truncate">{item.name}</p>
-                      <p className="text-xs text-gray-500">
-                        Qty: {item.quantity} | Variant: {item.variantName}
+                      <p className="font-semibold text-slate-800 text-sm truncate">{item.name}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        <span className="font-bold text-slate-800">₹{item.price.toFixed(2)} / unit</span> &nbsp;•&nbsp; Qty: {item.quantity} | Variant: {item.variantName}
                       </p>
                     </div>
-                    <p className="font-medium text-right shrink-0">
-                      ₹{(item.price * item.quantity).toLocaleString()}
-                    </p>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <p className="font-bold text-slate-900 text-sm">
+                        ₹{(item.price * item.quantity).toLocaleString()}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveCartItem(item.productId, item.variantId, item.quantity)}
+                        className="text-[#ED1C24] hover:text-[#D1171D] transition text-xs font-bold"
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </li>
                 ))}
               </ul>

@@ -79,12 +79,10 @@ export default function ProductClient({ product }) {
                 setUser(response.user);
                 toast.success(`Successfully added ${quantityToAdd} units of "${activeVariant.name}" to cart.`);
                 setQty(60); // Reset quantity spinner
-            } else {
-                toast.error(response?.error || "Failed to update cart.");
             }
         } catch (error) {
             console.error("Add to cart error:", error);
-            toast.error("An error occurred. Please try again.");
+            toast.error(error?.response?.data?.message || error?.message || "An error occurred. Please try again.");
         } finally {
             setIsActionLoading(false);
         }
@@ -107,12 +105,10 @@ export default function ProductClient({ product }) {
             if (response?.user) {
                 setUser(response.user);
                 toast.success(`Removed "${variantName}" from cart.`);
-            } else {
-                toast.error(response?.error || "Failed to update cart.");
             }
         } catch (error) {
             console.error("Remove from cart error:", error);
-            toast.error("An error occurred. Please try again.");
+            toast.error(error?.response?.data?.message || error?.message || "An error occurred. Please try again.");
         } finally {
             setIsActionLoading(false);
         }
@@ -376,10 +372,20 @@ export default function ProductClient({ product }) {
                                                 type="text"
                                                 value={qty}
                                                 onChange={(e) => {
-                                                    let num = parseInt(e.target.value);
-                                                    if (isNaN(num) || num < 1) num = 1;
+                                                    const val = e.target.value;
+                                                    if (val === "") {
+                                                        setQty("");
+                                                        return;
+                                                    }
+                                                    let num = parseInt(val);
+                                                    if (isNaN(num)) return;
                                                     if (num > 4000) num = 4000;
                                                     setQty(num);
+                                                }}
+                                                onBlur={() => {
+                                                    if (!qty || isNaN(parseInt(qty)) || parseInt(qty) < 1) {
+                                                        setQty(1);
+                                                    }
                                                 }}
                                                 className="w-16 h-9 text-center border border-slate-300 bg-white rounded-md font-bold text-slate-800 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition"
                                             />
