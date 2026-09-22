@@ -1,10 +1,11 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { ShieldCheck, ShieldAlert, CheckCircle2, AlertCircle, Building2, MapPin, Phone, Mail, Edit3, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import GstLookupCard from "@/components/onboarding/GstLookupCard";
 import { updateGstDetailsApi } from "@/lib/services/operations/OnboardingApi";
 import { toast } from "sonner";
+import { checkBusinessVerification } from "@/lib/utils";
 
 export default function BusinessProfile() {
   const { user, accessToken, updateUser } = useAuth();
@@ -12,9 +13,8 @@ export default function BusinessProfile() {
   const [isUpdating, setIsUpdating] = useState(false);
 
   const business = user?.business || {};
-  const isGstVerified = !!business.gstVerified;
-  const isVerified = !!business.verified;
-  
+  const { isGstVerified, isVerified } = checkBusinessVerification(user);
+
   const handleGstVerified = async (gstData) => {
     setIsUpdating(true);
     try {
@@ -43,7 +43,7 @@ export default function BusinessProfile() {
 
   return (
     <div className="space-y-6">
-      
+
       {/* Verification Status Header Card */}
       <div className="bg-white border border-slate-150 rounded-2xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex gap-4 items-start">
@@ -59,16 +59,15 @@ export default function BusinessProfile() {
               <h3 className="font-bold text-slate-800 text-lg">
                 {business.businessName || "No Business Name Added"}
               </h3>
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                isVerified 
-                  ? "bg-emerald-50 border-emerald-100 text-emerald-700" 
-                  : "bg-amber-50 border-amber-100 text-amber-700"
-              }`}>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${isVerified
+                ? "bg-emerald-50 border-emerald-100 text-emerald-700"
+                : "bg-amber-50 border-amber-100 text-amber-700"
+                }`}>
                 {isVerified ? "Verified B2B Account" : "Pending Verification"}
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-1 font-semibold leading-relaxed">
-              {isGstVerified 
+              {isGstVerified
                 ? `GSTIN: ${business.gstNumber}`
                 : "Manual profile setup. Verify GST for premium trade permissions."}
             </p>

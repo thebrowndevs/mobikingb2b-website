@@ -3,13 +3,15 @@
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
 import CheckoutPageV1 from "./CheckoutPageV1";
 import CheckoutPageV2 from "./CheckoutPageV2";
 import { Loader2 } from "lucide-react";
+import { checkBusinessVerification } from "@/lib/utils";
 
 export default function Page() {
   const router = useRouter();
-  const { isAuthenticated, isLoading, onboardingStep } = useAuth();
+  const { user, isAuthenticated, isLoading, onboardingStep } = useAuth();
 
   useEffect(() => {
     if (!isLoading) {
@@ -17,11 +19,19 @@ export default function Page() {
         router.replace("/login");
       } else if (onboardingStep !== null && onboardingStep < 2) {
         router.replace("/onboarding");
+      } else {
+        const { isVerified } = checkBusinessVerification(user);
+        if (!isVerified) {
+          toast.error("Your business profile is pending verification. Cannot place order.");
+          router.replace("/");
+        }
       }
     }
-  }, [isAuthenticated, isLoading, onboardingStep, router]);
+  }, [isAuthenticated, isLoading, onboardingStep, user, router]);
 
-  if (isLoading || !isAuthenticated || (onboardingStep !== null && onboardingStep < 2)) {
+  const { isVerified } = checkBusinessVerification(user);
+
+  if (isLoading || !isAuthenticated || (onboardingStep !== null && onboardingStep < 2) || !isVerified) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center space-y-3">
@@ -32,9 +42,5 @@ export default function Page() {
     );
   }
 
-  // To toggle between V1 (Original Razorpay Overlay) and V2 (Unified gateway routing),
-  // comment / uncomment the lines below:
-
-  // return <CheckoutPageV1 />;
   return <CheckoutPageV2 />;
 }

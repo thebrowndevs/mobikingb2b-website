@@ -11,6 +11,7 @@ import Quotations from "./_components/Quotations";
 import Wishlist from "./_components/Wishlist";
 import Cart from "./_components/Cart";
 import BusinessProfile from "./_components/BusinessProfile";
+import { checkBusinessVerification } from "@/lib/utils";
 import clsx from "clsx";
 
 function AccountContent() {
@@ -64,8 +65,8 @@ function AccountContent() {
     );
   }
 
-  const isVerified = user?.business?.verified;
-  const isBusinessActive = user?.business?.active;
+  const { isVerified, isApproved } = checkBusinessVerification(user);
+  const isBusinessActive = isApproved || isVerified;
   const userInitials = user?.name ? user.name.trim().split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2) : "M";
 
   return (

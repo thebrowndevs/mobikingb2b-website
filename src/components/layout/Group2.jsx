@@ -156,6 +156,10 @@ export default function Group2() {
           items = group.subcategories || [];
         } else if (group.groupType === 'categories') {
           items = group.categories || [];
+        } else if (group.groupType === 'brand') {
+          items = group.brands || [];
+        } else if (group.groupType === 'image') {
+          items = group.images || [];
         } else {
           items = group.products?.filter(p => p.active) || [];
         }
@@ -163,48 +167,84 @@ export default function Group2() {
         if (!items.length) return null;
 
         const webBg = group?.webBackgroundColor || "#ffffff";
-        const webRgb = parseInt(webBg.replace("#", ""), 16);
+        const isWebBgTransparent = !group.isWebBgColorVisible || webBg === "transparent" || webBg === "";
+        const webCleanBg = webBg.startsWith("#") ? webBg.slice(1) : webBg;
+        const webRgb = isWebBgTransparent ? 0xffffff : (parseInt(webCleanBg.length === 3 ? webCleanBg.split('').map(c => c + c).join('') : webCleanBg, 16) || 0xffffff);
         const webR = (webRgb >> 16) & 0xff;
         const webG = (webRgb >> 8) & 0xff;
         const webB = webRgb & 0xff;
         const webBrightness = (webR * 299 + webG * 587 + webB * 114) / 1000;
-        const webTextColorClass = group.isWebBgColorVisible
+        const webTextColorClass = (group.isWebBgColorVisible && !isWebBgTransparent)
           ? (webBrightness > 128 ? "min-[501px]:text-gray-900" : "min-[501px]:text-white")
-          : "min-[501px]:text-gray-800";
+          : "min-[501px]:text-gray-900";
+        const webCardTextColorClass = (group.isWebBgColorVisible && !isWebBgTransparent)
+          ? (webBrightness > 128 ? "min-[501px]:text-slate-700" : "min-[501px]:text-white")
+          : "min-[501px]:text-slate-700";
 
         const appBg = group?.appBackgroundColor || "#ffffff";
-        const appRgb = parseInt(appBg.replace("#", ""), 16);
+        const isAppBgTransparent = !group.isAppBgColorVisible || appBg === "transparent" || appBg === "";
+        const appCleanBg = appBg.startsWith("#") ? appBg.slice(1) : appBg;
+        const appRgb = isAppBgTransparent ? 0xffffff : (parseInt(appCleanBg.length === 3 ? appCleanBg.split('').map(c => c + c).join('') : appCleanBg, 16) || 0xffffff);
         const appR = (appRgb >> 16) & 0xff;
         const appG = (appRgb >> 8) & 0xff;
         const appB = appRgb & 0xff;
         const appBrightness = (appR * 299 + appG * 587 + appB * 114) / 1000;
-        const appTextColorClass = group.isAppBgColorVisible
+        const appTextColorClass = (group.isAppBgColorVisible && !isAppBgTransparent)
           ? (appBrightness > 128 ? "text-gray-900" : "text-white")
-          : "text-gray-800";
+          : "text-gray-900";
+        const appCardTextColorClass = (group.isAppBgColorVisible && !isAppBgTransparent)
+          ? (appBrightness > 128 ? "text-slate-700" : "text-white")
+          : "text-slate-700";
+
+        const itemTitleColorClass = `${appCardTextColorClass} ${webCardTextColorClass}`;
 
         const isLast = idx === groups.length - 1;
-        const isScroll = group.placement === 'scroll';
+        const isScroll = group.placement === 'scroll' || group.groupType === 'image' || group.groupType === 'brand';
 
         // Render card helpers
         const renderItem = (item) => {
           if (group.groupType === 'subcategories') {
             return (
-              <Link href={`/cs/${item.slug}`} className="group flex flex-col items-center text-center w-full py-1 ">
-                <div className="relative w-full aspect-square rounded-xl border border-slate-100 overflow-hidden bg-white shadow-sm transition transform group-hover:scale-105 group-hover:shadow-md">
-                  <img src={item.photos?.[0] || '/not-found-img.webp'} alt={item.name} className="object-cover w-full h-full p-1.5 rounded-xl" />
+              <Link href={`/cs/${item.slug}`} className="group flex flex-col items-center text-center w-full py-1">
+                <div className="relative w-full aspect-square rounded-xl overflow-hidden transition transform group-hover:scale-105">
+                  <img src={item.photos?.[0] || '/not-found-img.webp'} alt={item.name} className="object-cover w-full h-full rounded-xl" />
                 </div>
-                <span className="mt-2 text-xs sm:text-base font-medium text-slate-700 group-hover:text-indigo-650 transition truncate w-full px-1">{item.name}</span>
+                <span className={`mt-2 text-xs sm:text-base font-medium transition truncate w-full px-1 ${itemTitleColorClass}`}>{item.name}</span>
               </Link>
             );
           } else if (group.groupType === 'categories') {
             return (
               <Link href={`/categories`} className="group flex flex-col items-center text-center w-full py-1">
-                <div className="relative w-full aspect-square rounded-xl border border-slate-100 overflow-hidden bg-white shadow-sm transition transform group-hover:scale-105 group-hover:shadow-md">
-                  <img src={item.image || '/not-found-img.webp'} alt={item.name} className="object-cover w-full h-full p-1.5 rounded-xl" />
+                <div className="relative w-full aspect-square rounded-xl overflow-hidden transition transform group-hover:scale-105">
+                  <img src={item.image || '/not-found-img.webp'} alt={item.name} className="object-cover w-full h-full rounded-xl" />
                 </div>
-                <span className="mt-2 text-xs sm:text-base font-medium text-slate-700 group-hover:text-indigo-650 transition truncate w-full px-1">{item.name}</span>
+                <span className={`mt-2 text-xs sm:text-base font-medium transition truncate w-full px-1 ${itemTitleColorClass}`}>{item.name}</span>
               </Link>
             );
+          } else if (group.groupType === 'brand') {
+            return (
+              <Link href={`/search?brand=${encodeURIComponent(item.name || item._id)}`} className="group flex flex-col items-center text-center w-full py-1">
+                <div className="relative w-full aspect-square max-w-[110px] sm:max-w-[130px] rounded-xl overflow-hidden transition transform group-hover:scale-105 mx-auto">
+                  <img src={item.image || '/not-found-img.webp'} alt={item.name} className="object-cover w-full h-full rounded-xl" />
+                </div>
+                <span className={`mt-1.5 text-xs sm:text-sm font-medium transition truncate w-full px-1 ${itemTitleColorClass}`}>{item.name}</span>
+              </Link>
+            );
+          } else if (group.groupType === 'image') {
+            const cardImg = item.desktopUrl || item.mobileUrl || '/not-found-img.webp';
+            const cardContent = (
+              <div className="relative w-full aspect-[720/418] overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm transition transform group-hover:scale-[1.02] group-hover:shadow-md">
+                <img src={cardImg} alt="Banner" className="w-full h-full object-cover rounded-xl" />
+              </div>
+            );
+            if (item.redirectUrl) {
+              return (
+                <a href={item.redirectUrl} target="_blank" rel="noopener noreferrer" className="group block w-full py-1">
+                  {cardContent}
+                </a>
+              );
+            }
+            return <div className="group block w-full py-1">{cardContent}</div>;
           } else {
             return <ProductCard1 product={item} />;
           }
@@ -225,45 +265,45 @@ export default function Group2() {
             }}
           >
             <div className="w-full">
-              {/* ✅ Banner Section */}
+              {/* ✅ Banner Section - Auto height logic for group webBanner/appBanner */}
               {(group.isWebBannerVisible && group.webBanner) || (group.isAppBannerVisible && group.appBanner) ? (
                 <div className="relative overflow-hidden px-2 sm:px-4 -pt-2 -sm:pt-6 pb-5">
-                  {/* Desktop layout: 16:3 aspect ratio */}
+                  {/* Desktop layout: auto height */}
                   {group.isWebBannerVisible && group.webBanner && (
-                    <div className="hidden min-[501px]:block relative aspect-[16/3] w-full">
+                    <div className="hidden min-[501px]:block w-full">
                       {group.bannerLink ? (
-                        <a href={group.bannerLink} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                        <a href={group.bannerLink} target="_blank" rel="noopener noreferrer" className="block w-full">
                           <img
                             src={group.webBanner}
                             alt={group.heading || group.name}
-                            className="absolute inset-0 w-full h-full object-cover rounded-lg"
+                            className="w-full h-auto object-cover rounded-lg"
                           />
                         </a>
                       ) : (
                         <img
                           src={group.webBanner}
                           alt={group.heading || group.name}
-                          className="absolute inset-0 w-full h-full object-cover rounded-lg"
+                          className="w-full h-auto object-cover rounded-lg"
                         />
                       )}
                     </div>
                   )}
-                  {/* Mobile layout: 5:2 aspect ratio */}
+                  {/* Mobile layout: auto height */}
                   {group.isAppBannerVisible && group.appBanner && (
-                    <div className="block min-[501px]:hidden relative aspect-[5/2] w-full">
+                    <div className="block min-[501px]:hidden w-full">
                       {group.bannerLink ? (
-                        <a href={group.bannerLink} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                        <a href={group.bannerLink} target="_blank" rel="noopener noreferrer" className="block w-full">
                           <img
                             src={group.appBanner}
                             alt={group.heading || group.name}
-                            className="absolute inset-0 w-full h-full object-cover rounded-lg"
+                            className="w-full h-auto object-cover rounded-lg"
                           />
                         </a>
                       ) : (
                         <img
                           src={group.appBanner}
                           alt={group.heading || group.name}
-                          className="absolute inset-0 w-full h-full object-cover rounded-lg"
+                          className="w-full h-auto object-cover rounded-lg"
                         />
                       )}
                     </div>
@@ -271,19 +311,21 @@ export default function Group2() {
                 </div>
               ) : null}
 
-              {/* Group header */}
-              <div className={`mx-auto px-2 md:px-4 pt-2 flex flex-col sm:flex-row gap-3 justify-between items-center mb-3 ${((group.isWebBannerVisible && group.isWebBgColorVisible) || (group.isAppBannerVisible && group.isAppBgColorVisible)) ? "  " : "pt-3"}`}>
-                <h2 className={`text-center sm:text-left uppercase text-xl sm:text-2xl lg:text-3xl font-semibold tracking-tight w-full sm:w-auto ${appTextColorClass} ${webTextColorClass}`}>
-                  {group.heading || group.name}
-                </h2>
-                {group.groupType === 'products' && (
-                  <Link href={`/gp/${group?._id}`} className="hidden sm:flex w-full sm:w-auto justify-center">
-                    <Button variant="outline" className="bg-white cursor-pointer text-gray-800 border-slate-200 hover:bg-slate-50 w-full sm:w-auto">
-                      See All Products
-                    </Button>
-                  </Link>
-                )}
-              </div>
+              {/* Group header - respect hideName */}
+              {!group.hideName && (
+                <div className={`mx-auto px-2 md:px-4 pt-2 flex flex-col sm:flex-row gap-3 justify-between items-center mb-3 ${((group.isWebBannerVisible && group.isWebBgColorVisible) || (group.isAppBannerVisible && group.isAppBgColorVisible)) ? "  " : "pt-3"}`}>
+                  <h2 className={`text-center sm:text-left uppercase text-xl sm:text-2xl lg:text-3xl font-semibold tracking-tight w-full sm:w-auto ${appTextColorClass} ${webTextColorClass}`}>
+                    {group.heading || group.name}
+                  </h2>
+                  {group.groupType === 'products' && (
+                    <Link href={`/gp/${group?._id}`} className="hidden sm:flex w-full sm:w-auto justify-center">
+                      <Button variant="outline" className="bg-white cursor-pointer text-gray-800 border-slate-200 hover:bg-slate-50 w-full sm:w-auto">
+                        See All Products
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              )}
 
               {/* Render Scroll/Swiper View */}
               {isScroll ? (
@@ -298,12 +340,14 @@ export default function Group2() {
 
                   <Swiper
                     modules={[Autoplay, Navigation]}
-                    slidesPerView={group.groupType === 'products' ? 2 : 2.2}
-                    loop={items.length > (group.groupType === 'products' ? 6 : 4)}
+                    slidesPerView={
+                      group.groupType === 'products' ? 2 : group.groupType === 'image' ? 1.2 : group.groupType === 'brand' ? 3.5 : 2.2
+                    }
+                    loop={items.length > 1}
                     speed={600}
                     spaceBetween={12}
                     autoplay={{
-                      delay: 3500,
+                      delay: 3000,
                       disableOnInteraction: false,
                       pauseOnMouseEnter: true,
                     }}
@@ -319,18 +363,32 @@ export default function Group2() {
                           1024: { slidesPerView: 5, spaceBetween: 12 },
                           1280: { slidesPerView: 6, spaceBetween: 12 },
                         }
-                        : {
-                          480: { slidesPerView: 2.8, spaceBetween: 8 },
-                          640: { slidesPerView: 3.8, spaceBetween: 10 },
-                          1024: { slidesPerView: 5.5, spaceBetween: 10 },
-                          1280: { slidesPerView: 7.2, spaceBetween: 8 },
-                          1536: { slidesPerView: 8.2, spaceBetween: 8 },
-                        }
+                        : group.groupType === 'image'
+                          ? {
+                            480: { slidesPerView: 1.8, spaceBetween: 12 },
+                            640: { slidesPerView: 2.5, spaceBetween: 14 },
+                            1024: { slidesPerView: 3.2, spaceBetween: 16 },
+                            1280: { slidesPerView: 4, spaceBetween: 16 },
+                          }
+                          : group.groupType === 'brand'
+                            ? {
+                              480: { slidesPerView: 4.5, spaceBetween: 12 },
+                              640: { slidesPerView: 6, spaceBetween: 14 },
+                              1024: { slidesPerView: 8, spaceBetween: 16 },
+                              1280: { slidesPerView: 9.5, spaceBetween: 16 },
+                            }
+                            : {
+                              480: { slidesPerView: 2.8, spaceBetween: 8 },
+                              640: { slidesPerView: 3.8, spaceBetween: 10 },
+                              1024: { slidesPerView: 5.5, spaceBetween: 10 },
+                              1280: { slidesPerView: 7.2, spaceBetween: 8 },
+                              1536: { slidesPerView: 8.2, spaceBetween: 8 },
+                            }
                     }
                     className="overflow-hidden py-2"
                   >
-                    {items.map((item) => (
-                      <SwiperSlide key={item._id}>
+                    {items.map((item, itemIdx) => (
+                      <SwiperSlide key={item._id || itemIdx}>
                         <div className="w-full">
                           {renderItem(item)}
                         </div>
@@ -345,8 +403,8 @@ export default function Group2() {
                     ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
                     : 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7'
                     }`}>
-                    {items.map((item) => (
-                      <div key={item._id} className="w-full flex justify-center">
+                    {items.map((item, itemIdx) => (
+                      <div key={item._id || itemIdx} className="w-full flex justify-center">
                         {renderItem(item)}
                       </div>
                     ))}
