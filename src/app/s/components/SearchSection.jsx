@@ -13,6 +13,7 @@ export default function SearchSection() {
   const searchParams = useSearchParams();
   const searchKeyParam = searchParams.get("searchKey") ?? "";
   const qParam = searchParams.get("q") ?? "";
+  const brandParam = searchParams.get("brand") ?? "";
 
   const [priceFrom, setPriceFrom] = useState(0);
   const [priceTo, setPriceTo] = useState(50000);
@@ -26,18 +27,29 @@ export default function SearchSection() {
     );
   };
 
-  // fetch brands once
+  // fetch brands once & select initial brand if brandParam exists
   useEffect(() => {
     let mounted = true;
     getBrands()
       .then((data) => {
-        if (mounted) setBrands(data || []);
+        if (mounted) {
+          const loadedBrands = data || [];
+          setBrands(loadedBrands);
+          if (brandParam) {
+            const matched = loadedBrands.find(
+              (b) => String(b._id) === String(brandParam) || b.name?.toLowerCase() === brandParam.toLowerCase()
+            );
+            if (matched) {
+              setSelectedBrands([matched]);
+            }
+          }
+        }
       })
       .catch(() => {
         if (mounted) setBrands([]);
       });
     return () => (mounted = false);
-  }, []);
+  }, [brandParam]);
 
   const minPrice = 0;
   const maxPrice = 50000;

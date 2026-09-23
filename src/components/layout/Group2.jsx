@@ -199,7 +199,7 @@ export default function Group2() {
         const itemTitleColorClass = `${appCardTextColorClass} ${webCardTextColorClass}`;
 
         const isLast = idx === groups.length - 1;
-        const isScroll = group.placement === 'scroll' || group.groupType === 'image' || group.groupType === 'brand';
+        const isScroll = true; // Auto-sliding carousel only for all group types
 
         // Render card helpers
         const renderItem = (item) => {
@@ -223,7 +223,7 @@ export default function Group2() {
             );
           } else if (group.groupType === 'brand') {
             return (
-              <Link href={`/search?brand=${encodeURIComponent(item.name || item._id)}`} className="group flex flex-col items-center text-center w-full py-1">
+              <Link href={`/s?searchKey=${encodeURIComponent(item.name || '')}&brand=${encodeURIComponent(item._id || item.name || '')}`} className="group flex flex-col items-center text-center w-full py-1">
                 <div className="relative w-full aspect-square max-w-[110px] sm:max-w-[130px] rounded-xl overflow-hidden transition transform group-hover:scale-105 mx-auto">
                   <img src={item.image || '/not-found-img.webp'} alt={item.name} className="object-cover w-full h-full rounded-xl" />
                 </div>
