@@ -30,7 +30,8 @@ export default function CheckoutPaymentPage({ params: paramsPromise }) {
   // Gateway Settings State
   const [enableRazorpay, setEnableRazorpay] = useState(true);
   const [enablePhonepe, setEnablePhonepe] = useState(true);
-  const [selectedGateway, setSelectedGateway] = useState("razorpay"); // 'razorpay' | 'phonepe'
+  const [enableHdfc, setEnableHdfc] = useState(false);
+  const [selectedGateway, setSelectedGateway] = useState("razorpay"); // 'razorpay' | 'phonepe' | 'hdfc'
 
   const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
@@ -42,9 +43,12 @@ export default function CheckoutPaymentPage({ params: paramsPromise }) {
         if (response.data?.success) {
           const rz = response.data.data.enableRazorpay ?? true;
           const pp = response.data.data.enablePhonepe ?? true;
+          const hd = response.data.data.enableHdfc ?? false;
           setEnableRazorpay(rz);
           setEnablePhonepe(pp);
+          setEnableHdfc(hd);
           if (!rz && pp) setSelectedGateway("phonepe");
+          else if (!rz && !pp && hd) setSelectedGateway("hdfc");
           else if (rz) setSelectedGateway("razorpay");
         }
       } catch (err) {
@@ -138,13 +142,13 @@ export default function CheckoutPaymentPage({ params: paramsPromise }) {
 
   const handlePayNow = async () => {
     if (!payment) return;
-    if (!enableRazorpay && !enablePhonepe) {
+    if (!enableRazorpay && !enablePhonepe && !enableHdfc) {
       toast.error("Online payment is currently unavailable.");
       return;
     }
     setSubmittingPayment(true);
     try {
-      // Create Gateway Order (Razorpay or PhonePe)
+      // Create Gateway Order (Razorpay, PhonePe, or HDFC)
       const res = await axios.post(
         `${backendUrl}/payment/create-order`,
         {
@@ -162,6 +166,13 @@ export default function CheckoutPaymentPage({ params: paramsPromise }) {
       if (gatewayOrder.gateway === "phonepe" && gatewayOrder.redirectUrl) {
         // PhonePe flow: redirect user to PhonePe payment URL
         toast.loading("Redirecting to PhonePe payment gateway...");
+        window.location.href = gatewayOrder.redirectUrl;
+        return;
+      }
+
+      if (gatewayOrder.gateway === "hdfc" && gatewayOrder.redirectUrl) {
+        // HDFC flow: redirect user to HDFC SmartGateway payment URL
+        toast.loading("Redirecting to HDFC SmartGateway...");
         window.location.href = gatewayOrder.redirectUrl;
         return;
       }
@@ -618,7 +629,30 @@ export default function CheckoutPaymentPage({ params: paramsPromise }) {
                     </div>
                   )}
 
-                  {!enableRazorpay && !enablePhonepe && (
+                  {enableHdfc && (
+                    <div
+                      onClick={() => setSelectedGateway("hdfc")}
+                      className={`p-3.5 border rounded-xl cursor-pointer transition-all flex items-center justify-between ${selectedGateway === "hdfc"
+                        ? "border-blue-600 bg-blue-50/50 dark:bg-blue-950/20 ring-1 ring-blue-600"
+                        : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300"
+                        }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center font-bold text-[10px] text-blue-700">
+                          HDFC
+                        </div>
+                        <div>
+                          <p className="font-bold text-sm text-zinc-800 dark:text-zinc-200">HDFC SmartGateway</p>
+                          <p className="text-[11px] text-zinc-400">Cards, UPI, NetBanking via HDFC</p>
+                        </div>
+                      </div>
+                      {selectedGateway === "hdfc" && (
+                        <div className="w-4 h-4 rounded-full bg-blue-600 flex items-center justify-center text-white text-[10px]">✓</div>
+                      )}
+                    </div>
+                  )}
+
+                  {!enableRazorpay && !enablePhonepe && !enableHdfc && (
                     <p className="text-xs text-amber-600 bg-amber-50 p-3 rounded-xl border border-amber-200">
                       Online payment is currently unavailable.
                     </p>
@@ -626,7 +660,7 @@ export default function CheckoutPaymentPage({ params: paramsPromise }) {
                 </div>
 
                 <button
-                  disabled={submittingPayment || (!enableRazorpay && !enablePhonepe)}
+                  disabled={submittingPayment || (!enableRazorpay && !enablePhonepe && !enableHdfc)}
                   onClick={handlePayNow}
                   className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
@@ -634,7 +668,7 @@ export default function CheckoutPaymentPage({ params: paramsPromise }) {
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <>
-                      Pay ₹{payment.amount.toLocaleString("en-IN")} via {selectedGateway === "phonepe" ? "PhonePe" : "Razorpay"}
+                      Pay ₹{payment.amount.toLocaleString("en-IN")} via {selectedGateway === "phonepe" ? "PhonePe" : selectedGateway === "hdfc" ? "HDFC SmartGateway" : "Razorpay"}
                     </>
                   )}
                 </button>

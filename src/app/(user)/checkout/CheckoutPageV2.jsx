@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 // UI Components
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,15 @@ import { getMyCart, removeFromCartById } from "@/lib/services/operations/CartApi
 export default function CheckoutPageV2() {
   const { user, accessToken, setUser, isLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const paymentStatus = searchParams?.get("status");
+    const reason = searchParams?.get("reason");
+    if (paymentStatus === "failed") {
+      toast.error(reason ? `Payment was not completed (${reason}). Please retry.` : "Payment was not completed. Please retry.");
+    }
+  }, [searchParams]);
 
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
@@ -66,7 +75,8 @@ export default function CheckoutPageV2() {
   const [minQuotationLimit, setMinQuotationLimit] = useState(0);
   const [enableRazorpay, setEnableRazorpay] = useState(true);
   const [enablePhonepe, setEnablePhonepe] = useState(true);
-  const [selectedGateway, setSelectedGateway] = useState("razorpay"); // 'razorpay' | 'phonepe'
+  const [enableHdfc, setEnableHdfc] = useState(false);
+  const [selectedGateway, setSelectedGateway] = useState("razorpay"); // 'razorpay' | 'phonepe' | 'hdfc'
   const [limitsLoaded, setLimitsLoaded] = useState(false);
   const [modalConfig, setModalConfig] = useState(null);
 
@@ -114,9 +124,12 @@ export default function CheckoutPageV2() {
           setMinQuotationLimit(response.data.data.minQuotationLimit || 0);
           const rz = response.data.data.enableRazorpay ?? true;
           const pp = response.data.data.enablePhonepe ?? true;
+          const hd = response.data.data.enableHdfc ?? false;
           setEnableRazorpay(rz);
           setEnablePhonepe(pp);
+          setEnableHdfc(hd);
           if (!rz && pp) setSelectedGateway("phonepe");
+          else if (!rz && !pp && hd) setSelectedGateway("hdfc");
           else if (rz) setSelectedGateway("razorpay");
         }
       } catch (err) {
@@ -423,7 +436,7 @@ export default function CheckoutPageV2() {
       return;
     }
 
-    if (!enableRazorpay && !enablePhonepe) {
+    if (!enableRazorpay && !enablePhonepe && !enableHdfc) {
       toast.error("Online payment is currently unavailable. Please raise an order request.");
       return;
     }
@@ -466,6 +479,13 @@ export default function CheckoutPageV2() {
       if (orderData.gateway === "phonepe" && orderData.url) {
         // PhonePe flow: redirect user to PhonePe checkout URL
         toast.loading("Redirecting to PhonePe payment gateway...");
+        window.location.href = orderData.url;
+        return;
+      }
+
+      if (orderData.gateway === "hdfc" && orderData.url) {
+        // HDFC SmartGateway flow: redirect user to HDFC checkout URL
+        toast.loading("Redirecting to HDFC SmartGateway...");
         window.location.href = orderData.url;
         return;
       }
@@ -948,7 +968,27 @@ export default function CheckoutPageV2() {
               </div>
             )}
 
-            {!enableRazorpay && !enablePhonepe && (
+            {enableHdfc && (
+              <div
+                onClick={() => handleBuyNow("hdfc")}
+                className="relative p-4 border rounded-xl cursor-pointer hover:border-[#ED1C24] hover:bg-red-50/20 transition-all flex items-center justify-between border-slate-200"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center font-bold text-xs text-blue-700">
+                    HDFC
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm text-slate-900">HDFC SmartGateway</p>
+                    <p className="text-xs text-slate-500">Credit/Debit Cards, UPI, NetBanking via HDFC</p>
+                  </div>
+                </div>
+                <Button size="sm" className="bg-[#ED1C24] hover:bg-[#ED1C24]/90 text-white font-semibold text-xs px-4">
+                  Pay Now
+                </Button>
+              </div>
+            )}
+
+            {!enableRazorpay && !enablePhonepe && !enableHdfc && (
               <p className="text-sm text-amber-600 bg-amber-50 p-3 rounded border border-amber-200">
                 Online payment options are currently unavailable. Please click <strong>Order Request</strong> to request a manual quotation.
               </p>
