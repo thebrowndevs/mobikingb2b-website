@@ -974,9 +974,7 @@ export default function CheckoutPageV2() {
                 className="relative p-4 border rounded-xl cursor-pointer hover:border-[#ED1C24] hover:bg-red-50/20 transition-all flex items-center justify-between border-slate-200"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center font-bold text-xs text-blue-700">
-                    HDFC
-                  </div>
+                  <img src="/hdfc-icon.png" alt="HDFC SmartGateway" className="w-9 h-9 object-contain" />
                   <div>
                     <p className="font-semibold text-sm text-slate-900">HDFC SmartGateway</p>
                     <p className="text-xs text-slate-500">Credit/Debit Cards, UPI, NetBanking via HDFC</p>

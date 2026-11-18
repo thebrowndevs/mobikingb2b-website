@@ -638,9 +638,7 @@ export default function CheckoutPaymentPage({ params: paramsPromise }) {
                         }`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center font-bold text-[10px] text-blue-700">
-                          HDFC
-                        </div>
+                        <img src="/hdfc-icon.png" alt="HDFC SmartGateway" className="w-7 h-7 object-contain" />
                         <div>
                           <p className="font-bold text-sm text-zinc-800 dark:text-zinc-200">HDFC SmartGateway</p>
                           <p className="text-[11px] text-zinc-400">Cards, UPI, NetBanking via HDFC</p>
