@@ -65,6 +65,13 @@ export default function CheckoutPageV2() {
   const [totalSaved, setTotalSaved] = useState(0);
   const [discount, setDiscount] = useState(0);
   const [deliveryCharge, setDeliveryCharge] = useState(0);
+  const [totalVolumetricWeight, setTotalVolumetricWeight] = useState(0);
+  const [deliverySettings, setDeliverySettings] = useState({
+    firstKgCharge: 100,
+    additionalKgCharge: 60,
+    volumeMultiplier: 1.2,
+    volumetricDivisor: 5000
+  });
   const [grandTotal, setGrandTotal] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isBuyNowSubmitting, setIsBuyNowSubmitting] = useState(false);
@@ -128,6 +135,9 @@ export default function CheckoutPageV2() {
           setEnableRazorpay(rz);
           setEnablePhonepe(pp);
           setEnableHdfc(hd);
+          if (response.data.data.deliveryChargeSettings) {
+            setDeliverySettings(response.data.data.deliveryChargeSettings);
+          }
           if (!rz && pp) setSelectedGateway("phonepe");
           else if (!rz && !pp && hd) setSelectedGateway("hdfc");
           else if (rz) setSelectedGateway("razorpay");
@@ -303,6 +313,8 @@ export default function CheckoutPageV2() {
         ) : 0,
         quantity: item.quantity,
         variantName: item.variantName,
+        dimensions: item.productId?.dimensions,
+        baseDeliveryCharge: item.productId?.baseDeliveryCharge || 0
       }));
       const newSubtotal = itemsForDisplay.reduce(
         (acc, item) => acc + item.price * item.quantity,
@@ -313,18 +325,60 @@ export default function CheckoutPageV2() {
         0
       );
 
+      // Volumetric Delivery Charge Calculation (Grouped by Product)
+      let totalWeight = 0;
+      const productWeightMap = new Map();
+
+      for (const it of itemsForDisplay) {
+        const qty = Number(it.quantity) || 1;
+        const dims = it.dimensions;
+        let l = Math.max(0, Number(dims?.length) || 0);
+        let b = Math.max(0, Number(dims?.breadth) || 0);
+        let h = Math.max(0, Number(dims?.height) || 0);
+        const mult = Number(deliverySettings?.volumeMultiplier) || 1.2;
+        const div = Number(deliverySettings?.volumetricDivisor) || 5000;
+        const unitVol = l * b * h * mult;
+        const unitWeight = div > 0 ? (unitVol / div) : 0;
+        const itemTotalWeight = unitWeight * qty;
+        totalWeight += itemTotalWeight;
+
+        const pId = String(it.productId || "");
+        if (pId) {
+          productWeightMap.set(pId, (productWeightMap.get(pId) || 0) + itemTotalWeight);
+        }
+      }
+
+      let calculatedDelivery = 0;
+      const firstKg = Number(deliverySettings?.firstKgCharge) || 100;
+      const addKg = Number(deliverySettings?.additionalKgCharge) || 60;
+
+      for (const [pId, pWeight] of productWeightMap.entries()) {
+        if (pWeight > 0) {
+          if (pWeight <= 1.0) {
+            calculatedDelivery += firstKg;
+          } else {
+            const addUnits = Math.ceil(pWeight - 1.0);
+            calculatedDelivery += firstKg + (addUnits * addKg);
+          }
+        }
+      }
+      calculatedDelivery = Math.round(calculatedDelivery);
+
       setProcessedCartItems(itemsForDisplay);
       setSubtotal(newSubtotal);
       setTotalSaved(newTotalSaved);
-      setDeliveryCharge(0);
-      setGrandTotal(newSubtotal);
+      setTotalVolumetricWeight(parseFloat(totalWeight.toFixed(3)));
+      setDeliveryCharge(calculatedDelivery);
+      setGrandTotal(parseFloat(Math.max(0, newSubtotal - discount + calculatedDelivery).toFixed(2)));
     } else {
       setProcessedCartItems([]);
       setSubtotal(0);
       setTotalSaved(0);
+      setTotalVolumetricWeight(0);
+      setDeliveryCharge(0);
       setGrandTotal(0);
     }
-  }, [user]);
+  }, [user, deliverySettings, discount]);
 
   useEffect(() => {
     if (coupon) {
@@ -466,6 +520,8 @@ export default function CheckoutPageV2() {
           coupon: coupon || undefined,
           addressId: shippingAddress?._id,
           gateway: targetGateway,
+          deliveryCharge,
+          totalVolumetricWeight,
           isAppOrder: false
         },
         {
@@ -844,10 +900,22 @@ export default function CheckoutPageV2() {
                     <p>- ₹{discount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                   </div>
                 )}
-                {deliveryCharge > 0 && (
-                  <div className="flex justify-between font-medium">
+                {deliveryCharge > 0 ? (
+                  <div className="flex justify-between items-center font-medium">
+                    <div>
+                      <p className="text-gray-700">Delivery Charge</p>
+                      {totalVolumetricWeight > 0 && (
+                        <p className="text-[11px] text-gray-400 font-normal">
+                          Volumetric Wt: {totalVolumetricWeight} kg
+                        </p>
+                      )}
+                    </div>
+                    <p className="text-gray-900 font-semibold">₹{deliveryCharge.toLocaleString()}</p>
+                  </div>
+                ) : (
+                  <div className="flex justify-between items-center text-xs text-gray-500">
                     <p>Delivery Charge</p>
-                    <p>₹{deliveryCharge.toLocaleString()}</p>
+                    <span className="text-emerald-600 font-medium">Free / Included</span>
                   </div>
                 )}
               </div>

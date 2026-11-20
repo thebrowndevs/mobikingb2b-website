@@ -121,6 +121,20 @@ export default function Quotations() {
 
                   <Separator className="bg-slate-100" />
 
+                  {(quote.deliveryCharge > 0 || quote.totalVolumetricWeight > 0) && (
+                    <div className="flex justify-between items-center text-xs text-slate-500 pt-1">
+                      <span>
+                        Delivery Charge
+                        {quote.totalVolumetricWeight > 0 && (
+                          <span className="text-[11px] text-slate-400 font-normal ml-1">
+                            ({quote.totalVolumetricWeight} kg)
+                          </span>
+                        )}
+                      </span>
+                      <span className="font-semibold text-slate-700">₹{quote.deliveryCharge?.toLocaleString() || 0}</span>
+                    </div>
+                  )}
+
                   <div className="flex justify-between items-center pt-1">
                     <div>
                       <span className="text-xs text-slate-400 uppercase tracking-wider block">Estimated Total</span>
